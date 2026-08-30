@@ -1,0 +1,59 @@
+<resources>
+    <string name="app_name">커스텀 위젯</string>
+    <string name="widget_not_configured">위젯이 설정되지 않음</string>
+    <string name="tap_to_fix">탭하여 설정</string>
+
+    <!-- Navigation & Titles -->
+    <string name="title_gallery">내 위젯</string>
+    <string name="title_create">위젯 만들기</string>
+    <string name="title_settings">AI API 설정</string>
+    <string name="title_details">위젯 상세정보</string>
+
+    <!-- Create Wizard -->
+    <string name="step_select_size">크기 선택</string>
+    <string name="step_describe">위젯 설명</string>
+    <string name="step_generating">AI 생성 중...</string>
+    <string name="step_preview">미리보기</string>
+    <string name="step_save">저장</string>
+
+    <!-- Prompts & Placeholders -->
+    <string name="prompt_suggestions">템플릿 예시:</string>
+    <string name="prompt_hint">원하는 위젯의 내용과 스타일을 설명해주세요...</string>
+    <string name="prompt_example">예: 날짜와 배터리가 표시되는 미니멀한 디지털 시계 위젯</string>
+    <string name="widget_name_label">위젯 이름</string>
+    <string name="btn_back">이전</string>
+    <string name="btn_generate">AI로 위젯 생성</string>
+    <string name="btn_regenerate">다시 생성</string>
+    <string name="btn_edit_json">JSON 편집</string>
+    <string name="btn_close_json">JSON 닫기</string>
+    <string name="btn_apply_json">JSON 적용</string>
+    <string name="btn_save_widget">위젯 저장</string>
+    <string name="btn_done">완료</string>
+
+    <!-- Gallery -->
+    <string name="empty_gallery_title">저장된 위젯이 없습니다</string>
+    <string name="empty_gallery_desc">원하는 크기와 내용으로 첫 번째 AI 커스텀 위젯을 만들어보세요.</string>
+    <string name="btn_create_first">첫 위젯 만들기</string>
+    <string name="dialog_delete_title">위젯 삭제</string>
+    <string name="dialog_delete_message">정말 이 위젯을 삭제하시겠습니까?</string>
+    <string name="btn_delete">삭제</string>
+    <string name="btn_cancel">취소</string>
+
+    <!-- Settings -->
+    <string name="settings_presets">프리셋:</string>
+    <string name="settings_base_url">기본 URL</string>
+    <string name="settings_api_key">API 키</string>
+    <string name="settings_model">모델 이름</string>
+    <string name="settings_temperature">온도 (Temperature)</string>
+    <string name="settings_max_tokens">최대 토큰 (Max Tokens)</string>
+    <string name="btn_test_connection">연결 테스트</string>
+    <string name="btn_save_settings">설정 저장</string>
+    <string name="settings_saved_success">설정이 성공적으로 저장되었습니다!</string>
+
+    <!-- Error Messages -->
+    <string name="error_no_internet">인터넷 연결이 없습니다</string>
+    <string name="error_invalid_api_key">유효하지 않은 API 키입니다</string>
+    <string name="error_rate_limited">API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.</string>
+    <string name="error_generation_failed">위젯 생성에 실패했습니다</string>
+    <string name="btn_retry">다시 시도</string>
+</resources>
