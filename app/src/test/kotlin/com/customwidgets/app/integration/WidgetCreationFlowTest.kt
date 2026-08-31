@@ -118,7 +118,7 @@ class WidgetCreationFlowTest {
         )
 
         val config = AiConfig(
-            baseUrl = server.url("/").toString(),
+            customBaseUrl = server.url("/").toString(),
             apiKey = "test-key",
             model = "gpt-4o-mini"
         )

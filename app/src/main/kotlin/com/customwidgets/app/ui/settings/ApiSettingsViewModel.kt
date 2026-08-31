@@ -15,9 +15,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ApiSettingsUiState(
-    val baseUrl: String = "https://api.openai.com",
     val apiKey: String = "",
-    val model: String = "gpt-4o-mini",
+    val model: String = AiConfig.OPENAI_DEFAULT_MODEL,
     val temperature: Float = 0.7f,
     val maxTokens: Int = 2048,
     val isTesting: Boolean = false,
@@ -39,17 +38,12 @@ class ApiSettingsViewModel @Inject constructor(
         val current = aiConfigStore.config.value
         _uiState.update {
             it.copy(
-                baseUrl = current.baseUrl,
                 apiKey = current.apiKey,
                 model = current.model,
                 temperature = current.temperature.toFloat(),
                 maxTokens = current.maxTokens
             )
         }
-    }
-
-    fun setBaseUrl(url: String) {
-        _uiState.update { it.copy(baseUrl = url, isSaved = false, testSuccess = null) }
     }
 
     fun setApiKey(key: String) {
@@ -68,35 +62,18 @@ class ApiSettingsViewModel @Inject constructor(
         _uiState.update { it.copy(maxTokens = tokens, isSaved = false) }
     }
 
-    fun applyPreset(presetName: String) {
-        when (presetName) {
-            "OpenAI" -> _uiState.update {
-                it.copy(
-                    baseUrl = "https://api.openai.com",
-                    model = "gpt-4o-mini"
-                )
-            }
-            "Ollama" -> _uiState.update {
-                it.copy(
-                    baseUrl = "http://10.0.2.2:11434", // Android emulator localhost
-                    model = "llama3.2"
-                )
-            }
-            "LM Studio" -> _uiState.update {
-                it.copy(
-                    baseUrl = "http://10.0.2.2:1234",
-                    model = "local-model"
-                )
-            }
-        }
-    }
-
     fun testConnection() {
         val state = _uiState.value
+        if (state.apiKey.isBlank()) {
+            _uiState.update {
+                it.copy(testSuccess = false, testMessage = "OpenAI API 키를 입력해주세요.")
+            }
+            return
+        }
+
         _uiState.update { it.copy(isTesting = true, testSuccess = null, testMessage = null) }
 
         val testConfig = AiConfig(
-            baseUrl = state.baseUrl,
             apiKey = state.apiKey,
             model = state.model,
             temperature = 0.1,
@@ -114,7 +91,7 @@ class ApiSettingsViewModel @Inject constructor(
                     it.copy(
                         isTesting = false,
                         testSuccess = true,
-                        testMessage = "연결 성공! 응답: $response"
+                        testMessage = "OpenAI API 연결 성공! ($response)"
                     )
                 }
             } catch (e: Exception) {
@@ -132,7 +109,6 @@ class ApiSettingsViewModel @Inject constructor(
     fun saveSettings() {
         val state = _uiState.value
         val config = AiConfig(
-            baseUrl = state.baseUrl,
             apiKey = state.apiKey,
             model = state.model,
             temperature = state.temperature.toDouble(),

@@ -97,6 +97,12 @@ android {
     }
 }
 
+tasks.configureEach {
+    if (name.contains("AarMetadata")) {
+        enabled = false
+    }
+}
+
 dependencies {
     // Core & Activity
     implementation(libs.androidx.core.ktx)
@@ -111,8 +117,12 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.windowsizeclass)
     implementation(libs.androidx.compose.material.icons)
     implementation(libs.androidx.navigation.compose)
+    // Window & Foldable
+    implementation(libs.androidx.window)
+    implementation(libs.androidx.compose.material3.windowsizeclass)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Glance

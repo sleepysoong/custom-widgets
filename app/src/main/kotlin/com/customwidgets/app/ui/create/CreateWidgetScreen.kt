@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -22,15 +22,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,15 +34,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.customwidgets.app.R
 import com.customwidgets.app.ai.GenerationState
 import com.customwidgets.app.ui.preview.ComposeWidgetPreview
+import com.customwidgets.app.ui.theme.LiquidGlassBackground
+import com.customwidgets.app.ui.theme.LiquidGlassButton
+import com.customwidgets.app.ui.theme.LiquidGlassSurface
+import com.customwidgets.app.util.FoldableUtils
+import com.customwidgets.app.ui.theme.SquircleShape
 
 data class WidgetSizeOption(val width: Int, val height: Int, val label: String)
 
@@ -64,11 +62,11 @@ val SIZE_OPTIONS = listOf(
 )
 
 val TEMPLATE_PROMPTS = listOf(
-    "Minimal Clock" to "미니멀한 디지털 시계 위젯, 날짜와 시간 표시",
-    "Battery Monitor" to "배터리 잔량 표시 및 상태 위젯",
-    "Quick Launcher" to "자주 쓰는 앱 빠른 실행 버튼 바",
-    "Daily Quote" to "매일 새로운 영감을 주는 명언 위젯",
-    "System Dashboard" to "시간, 날짜, 배터리 통합 시스템 정보 대시보드"
+    "시계 위젯" to "미니멀한 디지털 시계 위젯, 날짜와 시간 표시",
+    "배터리 상태" to "배터리 잔량 표시 및 상태 위젯",
+    "빠른 실행" to "자주 쓰는 앱 빠른 실행 버튼 바",
+    "오늘의 명언" to "매일 새로운 영감을 주는 명언 위젯",
+    "대시보드" to "시간, 날짜, 배터리 통합 시스템 정보 대시보드"
 )
 
 @Composable
@@ -79,45 +77,228 @@ fun CreateWidgetScreen(
     onWidgetCreated: (Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isFoldExpanded = FoldableUtils.isExpandedScreen()
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
+    LiquidGlassBackground {
+        if (isFoldExpanded && uiState.currentStep in 1..2) {
+            // Galaxy Fold Unfolded Dual-Pane Layout
+            FoldableDualPaneWizard(
+                uiState = uiState,
+                viewModel = viewModel,
+                appWidgetId = appWidgetId,
+                onWidgetCreated = onWidgetCreated
+            )
+        } else {
+            // Compact / Standard Stacked Wizard
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                when (uiState.currentStep) {
+                    0 -> SizeSelectionStep(
+                        selectedWidth = uiState.widthCells,
+                        selectedHeight = uiState.heightCells,
+                        onSelectSize = { w, h -> viewModel.selectSize(w, h) }
+                    )
+                    1 -> DescriptionStep(
+                        description = uiState.description,
+                        width = uiState.widthCells,
+                        height = uiState.heightCells,
+                        onDescriptionChanged = { viewModel.updateDescription(it) },
+                        onGenerateClicked = { viewModel.generateWidget() },
+                        onBackClicked = { viewModel.setStep(0) }
+                    )
+                    2 -> GenerationAndPreviewStep(
+                        uiState = uiState,
+                        onRegenerate = { viewModel.generateWidget() },
+                        onToggleJsonEditor = { viewModel.toggleJsonEditor(it) },
+                        onJsonChanged = { viewModel.updateEditableJson(it) },
+                        onApplyJson = { viewModel.applyEditedJson() },
+                        onNameChanged = { viewModel.updateWidgetName(it) },
+                        onSave = {
+                            viewModel.saveWidget(appWidgetId) { id ->
+                                onWidgetCreated(id)
+                            }
+                        },
+                        onBackClicked = { viewModel.setStep(1) }
+                    )
+                    3 -> SaveConfirmationStep(
+                        widgetName = uiState.widgetName,
+                        onDoneClicked = onNavigateBack
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Galaxy Fold Main Screen (Folded Out) Dual-Pane Wizard:
+ * Left: Input & controls | Right: Real-time Liquid Glass Widget Preview
+ */
+@Composable
+private fun FoldableDualPaneWizard(
+    uiState: CreateWidgetUiState,
+    viewModel: CreateWidgetViewModel,
+    appWidgetId: Int?,
+    onWidgetCreated: (Long) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Left Pane: Controls & Description
+        LiquidGlassSurface(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .weight(1f)
+                .fillMaxHeight(),
+            cornerRadius = 24.dp
         ) {
-            when (uiState.currentStep) {
-                0 -> SizeSelectionStep(
-                    selectedWidth = uiState.widthCells,
-                    selectedHeight = uiState.heightCells,
-                    onSelectSize = { w, h -> viewModel.selectSize(w, h) }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "위젯 디자인 설정 (${uiState.widthCells}x${uiState.heightCells})",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
                 )
-                1 -> DescriptionStep(
-                    description = uiState.description,
-                    width = uiState.widthCells,
-                    height = uiState.heightCells,
-                    onDescriptionChanged = { viewModel.updateDescription(it) },
-                    onGenerateClicked = { viewModel.generateWidget() },
-                    onBackClicked = { viewModel.setStep(0) }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = uiState.description,
+                    onValueChange = { viewModel.updateDescription(it) },
+                    label = { Text("위젯 설명 입력") },
+                    placeholder = { Text("예: 날씨와 시계가 있는 세련된 글래스 위젯") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 4
                 )
-                2 -> GenerationAndPreviewStep(
-                    uiState = uiState,
-                    onRegenerate = { viewModel.generateWidget() },
-                    onToggleJsonEditor = { viewModel.toggleJsonEditor(it) },
-                    onJsonChanged = { viewModel.updateEditableJson(it) },
-                    onApplyJson = { viewModel.applyEditedJson() },
-                    onNameChanged = { viewModel.updateWidgetName(it) },
-                    onSave = {
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text("추천 템플릿:", fontSize = 12.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    TEMPLATE_PROMPTS.take(3).forEach { (label, prompt) ->
+                        FilterChip(
+                            selected = uiState.description == prompt,
+                            onClick = { viewModel.updateDescription(prompt) },
+                            label = { Text(label, fontSize = 11.sp) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LiquidGlassButton(
+                    onClick = { viewModel.generateWidget() },
+                    isPrimary = true,
+                    enabled = uiState.description.isNotBlank() && uiState.generationState !is GenerationState.Loading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("AI로 생성하기 ✨", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = uiState.widgetName,
+                    onValueChange = { viewModel.updateWidgetName(it) },
+                    label = { Text("위젯 이름") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LiquidGlassButton(
+                    onClick = {
                         viewModel.saveWidget(appWidgetId) { id ->
                             onWidgetCreated(id)
                         }
                     },
-                    onBackClicked = { viewModel.setStep(1) }
+                    enabled = uiState.generatedDefinition != null,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("홈 화면에 위젯 저장", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Right Pane: Live Liquid Glass Widget Preview
+        LiquidGlassSurface(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            cornerRadius = 24.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "실시간 미리보기",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
-                3 -> SaveConfirmationStep(
-                    widgetName = uiState.widgetName,
-                    onDoneClicked = onNavigateBack
-                )
+
+                when (val genState = uiState.generationState) {
+                    is GenerationState.Loading -> {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("OpenAI가 위젯을 렌더링하는 중...")
+                    }
+                    is GenerationState.Streaming -> {
+                        Text("스트리밍 중...", fontSize = 12.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .background(Color(0xFF1E1E1E), RoundedCornerShape(12.dp))
+                                .padding(12.dp)
+                        ) {
+                            Text(
+                                text = genState.partialText.takeLast(400),
+                                color = Color(0xFF00FF00),
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                    is GenerationState.Success -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.85f)
+                                .aspectRatio(1.3f)
+                        ) {
+                            ComposeWidgetPreview(
+                                definition = genState.definition,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                    else -> {
+                        Text(
+                            text = "왼쪽에서 설명을 입력하고\n[AI로 생성하기] 버튼을 눌러주세요.",
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
             }
         }
     }
@@ -129,34 +310,28 @@ private fun SizeSelectionStep(
     selectedHeight: Int,
     onSelectSize: (Int, Int) -> Unit
 ) {
+    val gridColumns = FoldableUtils.getWizardSizeGridColumns()
+
     Text(
-        text = "위젯 크기 선택 / Select Size",
+        text = "위젯 크기 선택",
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(bottom = 16.dp)
     )
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(gridColumns),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         items(SIZE_OPTIONS) { opt ->
             val isSelected = opt.width == selectedWidth && opt.height == selectedHeight
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                ),
+            LiquidGlassSurface(
                 modifier = Modifier
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(
-                        width = if (isSelected) 2.dp else 0.dp,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { onSelectSize(opt.width, opt.height) }
+                    .clickable { onSelectSize(opt.width, opt.height) },
+                cornerRadius = 16.dp
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -165,12 +340,13 @@ private fun SizeSelectionStep(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = opt.label,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 16.sp,
+                            color = if (isSelected) Color(0xFFBB86FC) else Color.Unspecified
                         )
                         Text(
-                            text = "${opt.width}x${opt.height}",
-                            fontSize = 12.sp,
+                            text = "${opt.width}x${opt.height} cells",
+                            fontSize = 11.sp,
                             color = Color.Gray
                         )
                     }
@@ -195,17 +371,13 @@ private fun DescriptionStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "위젯 설명 입력 / Describe Widget (${width}x${height})",
+            text = "위젯 내용 설명 (${width}x${height})",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = "템플릿 예시 / Suggestions:",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
+        Text("추천 템플릿:", fontSize = 13.sp, fontWeight = FontWeight.Medium)
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(
@@ -223,16 +395,18 @@ private fun DescriptionStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = description,
-            onValueChange = onDescriptionChanged,
-            label = { Text("원하는 위젯의 내용을 설명해주세요") },
-            placeholder = { Text("예: 상단에 시계와 날짜가 있고 아래에 배터리와 리프레시 버튼이 있는 위젯") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp),
-            maxLines = 5
-        )
+        LiquidGlassSurface(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = description,
+                onValueChange = onDescriptionChanged,
+                placeholder = { Text("원하는 위젯의 내용을 설명해주세요 (예: 시계와 배터리가 있는 다크 모드 위젯)") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .padding(8.dp),
+                maxLines = 5
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -240,14 +414,15 @@ private fun DescriptionStep(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedButton(onClick = onBackClicked) {
-                Text("이전 / Back")
+            LiquidGlassButton(onClick = onBackClicked) {
+                Text("이전")
             }
-            Button(
+            LiquidGlassButton(
                 onClick = onGenerateClicked,
+                isPrimary = true,
                 enabled = description.isNotBlank()
             ) {
-                Text("AI 생성 / Generate")
+                Text("AI 생성 ✨", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -280,7 +455,7 @@ private fun GenerationAndPreviewStep(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("AI가 위젯을 디자인하는 중...")
+                        Text("OpenAI가 위젯을 디자인하는 중...")
                     }
                 }
             }
@@ -305,41 +480,36 @@ private fun GenerationAndPreviewStep(
                 }
             }
             is GenerationState.Error -> {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                LiquidGlassSurface(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "생성 오류 / Error",
+                            text = "생성 오류",
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onErrorContainer
+                            color = MaterialTheme.colorScheme.error
                         )
                         Text(
                             text = genState.error.userMessage,
-                            color = MaterialTheme.colorScheme.onErrorContainer
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onRegenerate) {
-                    Text("다시 시도 / Retry")
+                LiquidGlassButton(onClick = onRegenerate) {
+                    Text("다시 시도")
                 }
             }
             is GenerationState.Success -> {
                 Text(
-                    text = "위젯 미리보기 / Preview (${uiState.widthCells}x${uiState.heightCells})",
+                    text = "위젯 미리보기 (${uiState.widthCells}x${uiState.heightCells})",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // In-app Live Compose Preview
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height((uiState.heightCells * 80).coerceIn(120, 300).dp)
-                        .padding(horizontal = 16.dp)
                 ) {
                     ComposeWidgetPreview(
                         definition = genState.definition,
@@ -352,7 +522,7 @@ private fun GenerationAndPreviewStep(
                 OutlinedTextField(
                     value = uiState.widgetName,
                     onValueChange = onNameChanged,
-                    label = { Text("위젯 이름 / Widget Name") },
+                    label = { Text("위젯 이름") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -362,13 +532,13 @@ private fun GenerationAndPreviewStep(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
+                    LiquidGlassButton(
                         onClick = { onToggleJsonEditor(!uiState.isJsonEditorOpen) },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(if (uiState.isJsonEditorOpen) "JSON 닫기" else "JSON 편집")
                     }
-                    OutlinedButton(
+                    LiquidGlassButton(
                         onClick = onRegenerate,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -391,8 +561,8 @@ private fun GenerationAndPreviewStep(
                             )
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = onApplyJson) {
-                            Text("JSON 적용 / Apply")
+                        LiquidGlassButton(onClick = onApplyJson) {
+                            Text("JSON 적용")
                         }
                     }
                 }
@@ -403,11 +573,11 @@ private fun GenerationAndPreviewStep(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    OutlinedButton(onClick = onBackClicked) {
-                        Text("수정 / Edit")
+                    LiquidGlassButton(onClick = onBackClicked) {
+                        Text("이전")
                     }
-                    Button(onClick = onSave) {
-                        Text("위젯 저장 / Save")
+                    LiquidGlassButton(onClick = onSave, isPrimary = true) {
+                        Text("위젯 저장", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -428,32 +598,39 @@ private fun SaveConfirmationStep(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "🎉",
-            fontSize = 48.sp
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "위젯이 저장되었습니다!",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "\"$widgetName\"",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "홈 화면을 길게 누르고 '위젯'을 선택한 뒤\n'Custom Widgets'를 추가해주세요.",
-            textAlign = TextAlign.Center,
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onDoneClicked) {
-            Text("완료 / Done")
+        LiquidGlassSurface(
+            modifier = Modifier.padding(16.dp),
+            cornerRadius = 32.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "🎉", fontSize = 48.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "위젯이 저장되었습니다!",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "\"$widgetName\"",
+                    fontSize = 16.sp,
+                    color = Color(0xFFBB86FC)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "홈 화면을 길게 누르고 '위젯'을 선택한 뒤\n'Custom Widgets'를 추가해주세요.",
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                LiquidGlassButton(onClick = onDoneClicked, isPrimary = true) {
+                    Text("완료", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }

@@ -4,18 +4,32 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Configuration for OpenAI-compatible API connection.
+ * OpenAI API Configuration.
  */
 @Serializable
 data class AiConfig(
-    val baseUrl: String = "https://api.openai.com",
     val apiKey: String = "",
-    val model: String = "gpt-4o-mini",
+    val model: String = OPENAI_DEFAULT_MODEL,
     val temperature: Double = 0.7,
-    val maxTokens: Int = 2048
+    val maxTokens: Int = 2048,
+    val customBaseUrl: String? = null // For testing with MockWebServer
 ) {
+    val baseUrl: String
+        get() = customBaseUrl ?: OPENAI_BASE_URL
+
     val cleanBaseUrl: String
         get() = baseUrl.trimEnd('/')
+
+    companion object {
+        const val OPENAI_BASE_URL = "https://api.openai.com"
+        const val OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
+        val SUPPORTED_MODELS = listOf(
+            "gpt-4o-mini" to "Fast & Cost-effective (Recommended)",
+            "gpt-4o" to "High Intelligence & Rich Design",
+            "o3-mini" to "Advanced Reasoning",
+            "gpt-4-turbo" to "Legacy GPT-4 Turbo"
+        )
+    }
 }
 
 @Serializable
@@ -67,7 +81,7 @@ data class ChunkDelta(
 )
 
 // Typed AI exceptions
-open class AiApiException(val code: Int, override val message: String) : Exception("API Error $code: $message")
+open class AiApiException(val code: Int, override val message: String) : Exception("OpenAI API Error $code: $message")
 class AiAuthException(message: String) : AiApiException(401, message)
 class AiRateLimitException(message: String) : AiApiException(429, message)
 class AiServerException(code: Int, message: String) : AiApiException(code, message)

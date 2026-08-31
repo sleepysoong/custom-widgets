@@ -48,7 +48,7 @@ class AiServiceTest {
                 .setBody(sseBody)
         )
 
-        val config = AiConfig(baseUrl = server.url("/").toString(), apiKey = "test-key")
+        val config = AiConfig(customBaseUrl = server.url("/").toString(), apiKey = "test-key")
         val messages = listOf(ChatMessage("user", "Create clock widget"))
 
         val tokens = service.streamChatCompletion(messages, config).toList()
@@ -81,7 +81,7 @@ class AiServiceTest {
                 .setBody(responseJson)
         )
 
-        val config = AiConfig(baseUrl = server.url("/").toString(), apiKey = "test-key")
+        val config = AiConfig(customBaseUrl = server.url("/").toString(), apiKey = "test-key")
         val messages = listOf(ChatMessage("user", "Create widget"))
 
         val content = service.chatCompletionSync(messages, config)
@@ -96,7 +96,7 @@ class AiServiceTest {
                 .setBody("Unauthorized API key")
         )
 
-        val config = AiConfig(baseUrl = server.url("/").toString())
+        val config = AiConfig(customBaseUrl = server.url("/").toString())
         try {
             service.chatCompletionSync(listOf(ChatMessage("user", "hi")), config)
             org.junit.Assert.fail("Expected AiAuthException")
@@ -113,7 +113,7 @@ class AiServiceTest {
                 .setBody("Rate limit reached")
         )
 
-        val config = AiConfig(baseUrl = server.url("/").toString())
+        val config = AiConfig(customBaseUrl = server.url("/").toString())
         try {
             service.chatCompletionSync(listOf(ChatMessage("user", "hi")), config)
             org.junit.Assert.fail("Expected AiRateLimitException")
@@ -130,7 +130,7 @@ class AiServiceTest {
                 .setBody("Internal Server Error")
         )
 
-        val config = AiConfig(baseUrl = server.url("/").toString())
+        val config = AiConfig(customBaseUrl = server.url("/").toString())
         try {
             service.chatCompletionSync(listOf(ChatMessage("user", "hi")), config)
             org.junit.Assert.fail("Expected AiServerException")
@@ -141,13 +141,11 @@ class AiServiceTest {
 
     @Test
     fun responseFormat400_retriesWithoutResponseFormat() = runTest {
-        // First request with json_object returns 400 (unsupported on provider)
         server.enqueue(
             MockResponse()
                 .setResponseCode(400)
                 .setBody("response_format is not supported")
         )
-        // Second request without json_object succeeds
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
@@ -155,7 +153,7 @@ class AiServiceTest {
                 .setBody("""{"choices":[{"message":{"role":"assistant","content":"{\"ok\":true}"}}]}""")
         )
 
-        val config = AiConfig(baseUrl = server.url("/").toString())
+        val config = AiConfig(customBaseUrl = server.url("/").toString())
         val result = service.chatCompletionSync(listOf(ChatMessage("user", "hi")), config, useJsonMode = true)
 
         assertEquals("{\"ok\":true}", result)

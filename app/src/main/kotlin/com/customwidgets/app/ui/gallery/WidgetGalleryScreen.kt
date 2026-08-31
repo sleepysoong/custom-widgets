@@ -15,14 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -41,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,6 +47,12 @@ import androidx.compose.ui.unit.sp
 import com.customwidgets.app.domain.model.WidgetDefinition
 import com.customwidgets.app.domain.model.WidgetMetadata
 import com.customwidgets.app.ui.preview.ComposeWidgetPreview
+import com.customwidgets.app.ui.theme.LiquidGlassBackground
+import com.customwidgets.app.ui.theme.LiquidGlassButton
+import com.customwidgets.app.ui.theme.LiquidGlassDefaults
+import com.customwidgets.app.ui.theme.LiquidGlassSurface
+import com.customwidgets.app.util.FoldableUtils
+import com.customwidgets.app.ui.theme.SquircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,53 +64,61 @@ fun WidgetGalleryScreen(
 ) {
     val widgets by viewModel.widgets.collectAsState()
     var widgetToDelete by remember { mutableStateOf<WidgetMetadata?>(null) }
+    val gridColumns = FoldableUtils.getGalleryGridColumns()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Custom Widgets", fontWeight = FontWeight.Bold) },
-                actions = {
-                    IconButton(onClick = onSettingsClicked) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCreateWidgetClicked,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Widget", tint = Color.White)
-            }
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            if (widgets.isEmpty()) {
-                EmptyGalleryState(onCreateClicked = onCreateWidgetClicked)
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    items(widgets, key = { it.id }) { widget ->
-                        WidgetGalleryCard(
-                            widget = widget,
-                            onClick = { onWidgetClicked(widget.id) },
-                            onDeleteClick = { widgetToDelete = widget }
+    LiquidGlassBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Custom Widgets",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp
                         )
+                    },
+                    actions = {
+                        IconButton(onClick = onSettingsClicked) {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onCreateWidgetClicked,
+                    containerColor = Color(0xFF6200EE),
+                    shape = SquircleShape(16.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Create Widget", tint = Color.White)
+                }
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                if (widgets.isEmpty()) {
+                    EmptyGalleryState(onCreateClicked = onCreateWidgetClicked)
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(gridColumns),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        items(widgets, key = { it.id }) { widget ->
+                            LiquidGlassWidgetCard(
+                                widget = widget,
+                                onClick = { onWidgetClicked(widget.id) },
+                                onDeleteClick = { widgetToDelete = widget }
+                            )
+                        }
                     }
                 }
             }
@@ -118,7 +128,7 @@ fun WidgetGalleryScreen(
     widgetToDelete?.let { target ->
         AlertDialog(
             onDismissRequest = { widgetToDelete = null },
-            title = { Text("위젯 삭제 / Delete Widget") },
+            title = { Text("위젯 삭제", fontWeight = FontWeight.Bold) },
             text = { Text("\"${target.name}\" 위젯을 삭제하시겠습니까?") },
             confirmButton = {
                 TextButton(
@@ -127,12 +137,12 @@ fun WidgetGalleryScreen(
                         widgetToDelete = null
                     }
                 ) {
-                    Text("삭제 / Delete", color = MaterialTheme.colorScheme.error)
+                    Text("삭제", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { widgetToDelete = null }) {
-                    Text("취소 / Cancel")
+                    Text("취소")
                 }
             }
         )
@@ -140,7 +150,7 @@ fun WidgetGalleryScreen(
 }
 
 @Composable
-private fun WidgetGalleryCard(
+private fun LiquidGlassWidgetCard(
     widget: WidgetMetadata,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -153,20 +163,18 @@ private fun WidgetGalleryCard(
         }
     }
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    LiquidGlassSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        cornerRadius = 20.dp
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // Mini Preview
+            // Live Preview Box
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.4f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .aspectRatio(1.3f)
             ) {
                 if (definition != null) {
                     ComposeWidgetPreview(
@@ -185,7 +193,7 @@ private fun WidgetGalleryCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -201,16 +209,16 @@ private fun WidgetGalleryCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "${widget.sizeLabel} cells",
+                        text = "${widget.sizeLabel} grid",
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFFBB86FC)
                     )
                 }
-                IconButton(onClick = onDeleteClick, modifier = Modifier.padding(0.dp)) {
+                IconButton(onClick = onDeleteClick) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = Color.Gray
+                        tint = Color.LightGray.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -227,23 +235,36 @@ private fun EmptyGalleryState(onCreateClicked: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "🎨", fontSize = 56.sp)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "저장된 위젯이 없습니다",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "AI로 원하는 크기와 내용의 위젯을 만들어보세요.",
-            textAlign = TextAlign.Center,
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        androidx.compose.material3.Button(onClick = onCreateClicked) {
-            Text("첫 위젯 만들기 / Create Widget")
+        LiquidGlassSurface(
+            modifier = Modifier.padding(16.dp),
+            cornerRadius = 32.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "✨", fontSize = 48.sp)
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "저장된 위젯이 없습니다",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "원하는 크기와 내용을 입력하면\nAI가 나만의 홈 화면 위젯을 제작해드립니다.",
+                    textAlign = TextAlign.Center,
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                LiquidGlassButton(
+                    onClick = onCreateClicked,
+                    isPrimary = true
+                ) {
+                    Text("첫 위젯 만들기", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
