@@ -7,12 +7,27 @@ import com.customwidgets.app.domain.model.DslModifier
 import com.customwidgets.app.domain.model.DslPadding
 import com.customwidgets.app.domain.model.WidgetDefinition
 import com.customwidgets.app.domain.model.WidgetNode
+import com.customwidgets.app.mcp.model.McpTool
 
 object WidgetPromptBuilder {
 
-    fun buildSystemPrompt(): String {
+    fun buildSystemPrompt(mcpServersWithTools: List<Pair<String, List<McpTool>>> = emptyList()): String {
+        val mcpSection = if (mcpServersWithTools.isNotEmpty()) {
+            buildString {
+                appendLine("\n### AVAILABLE MCP (MODEL CONTEXT PROTOCOL) DATA TOOLS:")
+                mcpServersWithTools.forEach { (serverName, tools) ->
+                    appendLine("- MCP Server \"$serverName\":")
+                    tools.forEach { tool ->
+                        appendLine("  * Tool \"${tool.name}\": ${tool.description}")
+                        appendLine("    Data binding syntax: \"{{mcp:$serverName:${tool.name}:param=value:jsonpath}}\"")
+                    }
+                }
+                appendLine("You can embed these MCP tool tokens in \"text\" nodes to bind live data from tools.")
+            }
+        } else ""
+
         return """
-You are an expert Android widget UI designer. Your task is to generate valid JSON widget definitions matching the exact DSL schema.
+You are an expert Android widget UI designer using Material 3 and Jetpack Glance. Your task is to generate valid JSON widget definitions matching the exact DSL schema.
 
 ### DSL SCHEMA SPECIFICATION:
 
@@ -57,12 +72,14 @@ You are an expert Android widget UI designer. Your task is to generate valid JSO
 - "{{date}}" -> Current date (e.g. "Aug 30, 2026")
 - "{{battery}}" -> Battery percentage (e.g. "85%")
 - "{{http:<url>:<jsonpath>}}" -> Dynamic HTTP value (e.g. "{{http:https://wttr.in/?format=j1:current_condition.0.temp_C}}")
+- "{{mcp:<server_name>:<tool_name>:<args>:jsonpath}}" -> Dynamic MCP Tool value
+$mcpSection
 
-### SAFETY AND DESIGN CONSTRAINTS:
+### MATERIAL 3 DESIGN CONSTRAINTS:
 - Output MUST be valid JSON only. DO NOT wrap with markdown fences (no ```json).
 - Maximum nesting depth is 5 levels.
 - Maximum total node count is 50 nodes.
-- Use attractive Material You-inspired colors with high contrast.
+- Use Material 3 color harmonies (primary, surfaceVariant, onSurface, accent).
 - Ensure the widget layout fits the requested grid cell size ratio.
 """.trimIndent()
     }
@@ -169,10 +186,6 @@ Generate the complete JSON WidgetDefinition object adhering strictly to the DSL 
         )
     }
 
-    /**
-     * Extracts and validates a WidgetDefinition from AI response text.
-     * Cleans markdown fences, leading/trailing prose, and validates constraints.
-     */
     fun parseAiResponse(rawResponse: String): Result<WidgetDefinition> {
         return try {
             val cleaned = cleanJsonResponse(rawResponse)
@@ -186,7 +199,6 @@ Generate the complete JSON WidgetDefinition object adhering strictly to the DSL 
     private fun cleanJsonResponse(raw: String): String {
         var text = raw.trim()
 
-        // Strip markdown code fences if present (```json ... ```)
         if (text.startsWith("```")) {
             text = text.substringAfter("\n")
         }
@@ -195,7 +207,6 @@ Generate the complete JSON WidgetDefinition object adhering strictly to the DSL 
         }
         text = text.trim()
 
-        // Find outer JSON object boundaries if surrounded by conversational prose
         val firstBrace = text.indexOf('{')
         val lastBrace = text.lastIndexOf('}')
         if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace) {

@@ -2,17 +2,20 @@ package com.customwidgets.app.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.customwidgets.app.data.local.dao.McpServerDao
 import com.customwidgets.app.data.local.dao.WidgetDao
 import com.customwidgets.app.data.local.entity.AppWidgetIdEntity
+import com.customwidgets.app.data.local.entity.McpServerEntity
 import com.customwidgets.app.data.local.entity.WidgetEntity
 
 @Database(
-    entities = [WidgetEntity::class, AppWidgetIdEntity::class],
-    version = 1,
+    entities = [WidgetEntity::class, AppWidgetIdEntity::class, McpServerEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class WidgetDatabase : RoomDatabase() {
     abstract fun widgetDao(): WidgetDao
+    abstract fun mcpServerDao(): McpServerDao
 
     companion object {
         const val DATABASE_NAME = "custom_widgets.db"

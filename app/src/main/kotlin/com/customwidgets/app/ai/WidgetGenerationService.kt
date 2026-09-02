@@ -8,6 +8,8 @@ import com.customwidgets.app.ai.model.ChatMessage
 import com.customwidgets.app.ai.prompt.WidgetPromptBuilder
 import com.customwidgets.app.domain.model.AppError
 import com.customwidgets.app.domain.model.WidgetDefinition
+import com.customwidgets.app.mcp.McpClient
+import com.customwidgets.app.mcp.McpServerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.IOException
@@ -24,10 +26,13 @@ sealed interface GenerationState {
 
 @Singleton
 class WidgetGenerationService @Inject constructor(
-    private val aiService: AiService
+    private val aiService: AiService,
+    private val mcpRepository: McpServerRepository,
+    private val mcpClient: McpClient
 ) {
     /**
-     * Streams AI widget generation for the user's description and grid size.
+     * Streams AI widget generation for the user's description and grid size,
+     * augmenting the system prompt with active MCP server tools.
      */
     fun generateWidget(
         description: String,
@@ -37,7 +42,17 @@ class WidgetGenerationService @Inject constructor(
     ): Flow<GenerationState> = flow {
         emit(GenerationState.Loading)
 
-        val systemPrompt = WidgetPromptBuilder.buildSystemPrompt()
+        // Query active MCP servers and their exposed tools
+        val mcpTools = try {
+            val enabledServers = mcpRepository.getAllEnabledServers()
+            enabledServers.map { server ->
+                server.name to mcpClient.listTools(server)
+            }.filter { it.second.isNotEmpty() }
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+        val systemPrompt = WidgetPromptBuilder.buildSystemPrompt(mcpTools)
         val userPrompt = WidgetPromptBuilder.buildUserPrompt(description, widthCells, heightCells)
         val fewShot = WidgetPromptBuilder.buildFewShotExamples()
 

@@ -49,6 +49,27 @@ class DataBindingResolverTest {
     }
 
     @Test
+    fun resolveMcpBinding_firstPaint_showsLoading() {
+        val resolver = DataBindingResolver()
+        val template = "Price: {{mcp:CryptoServer:get_price:symbol=BTC:usd}}"
+        val resolved = resolver.resolve(template)
+
+        assertEquals("Price: Loading...", resolved)
+    }
+
+    @Test
+    fun resolveMcpBinding_cached_showsCachedValue() {
+        val resolver = DataBindingResolver()
+        val key = "CryptoServer:get_price:symbol=BTC:usd"
+        resolver.updateMcpCache(key, "$95,000")
+
+        val template = "Price: {{mcp:CryptoServer:get_price:symbol=BTC:usd}}"
+        val resolved = resolver.resolve(template)
+
+        assertEquals("Price: $95,000", resolved)
+    }
+
+    @Test
     fun resolveStaticText_unchanged() {
         val resolver = DataBindingResolver()
         val text = "Simple static text"

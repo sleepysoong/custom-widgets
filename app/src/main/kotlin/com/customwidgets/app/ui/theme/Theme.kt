@@ -10,16 +10,60 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+private val ExpressiveDarkColorScheme = darkColorScheme(
+    primary = MdDarkPrimary,
+    onPrimary = MdDarkOnPrimary,
+    primaryContainer = MdDarkPrimaryContainer,
+    onPrimaryContainer = MdDarkOnPrimaryContainer,
+    secondary = MdDarkSecondary,
+    onSecondary = MdDarkOnSecondary,
+    secondaryContainer = MdDarkSecondaryContainer,
+    onSecondaryContainer = MdDarkOnSecondaryContainer,
+    tertiary = MdDarkTertiary,
+    onTertiary = MdDarkOnTertiary,
+    tertiaryContainer = MdDarkTertiaryContainer,
+    onTertiaryContainer = MdDarkOnTertiaryContainer,
+    background = MdDarkBackground,
+    onBackground = MdDarkOnBackground,
+    surface = MdDarkSurface,
+    onSurface = MdDarkOnSurface,
+    surfaceVariant = MdDarkSurfaceVariant,
+    onSurfaceVariant = MdDarkOnSurfaceVariant,
+    surfaceContainer = MdDarkSurfaceContainer,
+    surfaceContainerHigh = MdDarkSurfaceContainerHigh,
+    surfaceContainerHighest = MdDarkSurfaceContainerHighest,
+    surfaceContainerLow = MdDarkSurfaceContainerLow,
+    surfaceContainerLowest = MdDarkSurfaceContainerLowest,
+    outline = MdDarkOutline,
+    outlineVariant = MdDarkOutlineVariant
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+private val ExpressiveLightColorScheme = lightColorScheme(
+    primary = MdLightPrimary,
+    onPrimary = MdLightOnPrimary,
+    primaryContainer = MdLightPrimaryContainer,
+    onPrimaryContainer = MdLightOnPrimaryContainer,
+    secondary = MdLightSecondary,
+    onSecondary = MdLightOnSecondary,
+    secondaryContainer = MdLightSecondaryContainer,
+    onSecondaryContainer = MdLightOnSecondaryContainer,
+    tertiary = MdLightTertiary,
+    onTertiary = MdLightOnTertiary,
+    tertiaryContainer = MdLightTertiaryContainer,
+    onTertiaryContainer = MdLightOnTertiaryContainer,
+    background = MdLightBackground,
+    onBackground = MdLightOnBackground,
+    surface = MdLightSurface,
+    onSurface = MdLightOnSurface,
+    surfaceVariant = MdLightSurfaceVariant,
+    onSurfaceVariant = MdLightOnSurfaceVariant,
+    surfaceContainer = MdLightSurfaceContainer,
+    surfaceContainerHigh = MdLightSurfaceContainerHigh,
+    surfaceContainerHighest = MdLightSurfaceContainerHighest,
+    surfaceContainerLow = MdLightSurfaceContainerLow,
+    surfaceContainerLowest = MdLightSurfaceContainerLowest,
+    outline = MdLightOutline,
+    outlineVariant = MdLightOutlineVariant
 )
 
 @Composable
@@ -33,12 +77,13 @@ fun CustomWidgetsTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> ExpressiveDarkColorScheme
+        else -> ExpressiveLightColorScheme
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
+        shapes = ExpressiveShapes,
         typography = Typography,
         content = content
     )

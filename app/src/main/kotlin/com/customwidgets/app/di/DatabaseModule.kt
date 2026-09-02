@@ -3,6 +3,7 @@ package com.customwidgets.app.di
 import android.content.Context
 import androidx.room.Room
 import com.customwidgets.app.data.local.WidgetDatabase
+import com.customwidgets.app.data.local.dao.McpServerDao
 import com.customwidgets.app.data.local.dao.WidgetDao
 import com.customwidgets.app.data.repository.WidgetRepository
 import dagger.Module
@@ -23,13 +24,21 @@ object DatabaseModule {
             context,
             WidgetDatabase::class.java,
             WidgetDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     @Singleton
     fun provideWidgetDao(database: WidgetDatabase): WidgetDao {
         return database.widgetDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMcpServerDao(database: WidgetDatabase): McpServerDao {
+        return database.mcpServerDao()
     }
 
     @Provides

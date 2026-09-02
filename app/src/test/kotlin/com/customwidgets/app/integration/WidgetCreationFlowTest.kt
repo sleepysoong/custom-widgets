@@ -11,6 +11,8 @@ import com.customwidgets.app.ai.model.AiConfig
 import com.customwidgets.app.ai.prompt.WidgetPromptBuilder
 import com.customwidgets.app.data.local.WidgetDatabase
 import com.customwidgets.app.data.repository.WidgetRepository
+import com.customwidgets.app.mcp.McpClient
+import com.customwidgets.app.mcp.McpServerRepository
 import com.customwidgets.app.ui.create.CreateWidgetViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,8 +60,10 @@ class WidgetCreationFlowTest {
         repository = WidgetRepository(database.widgetDao())
 
         val okHttpClient = OkHttpClient()
+        val mcpRepository = McpServerRepository(database.mcpServerDao())
+        val mcpClient = McpClient(okHttpClient)
         aiService = AiService(okHttpClient)
-        generationService = WidgetGenerationService(aiService)
+        generationService = WidgetGenerationService(aiService, mcpRepository, mcpClient)
         aiConfigStore = AiConfigStore(context)
     }
 

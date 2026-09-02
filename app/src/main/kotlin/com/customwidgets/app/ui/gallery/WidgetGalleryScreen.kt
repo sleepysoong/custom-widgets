@@ -1,6 +1,5 @@
 package com.customwidgets.app.ui.gallery
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,18 +16,24 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,18 +53,14 @@ import androidx.compose.ui.unit.sp
 import com.customwidgets.app.domain.model.WidgetDefinition
 import com.customwidgets.app.domain.model.WidgetMetadata
 import com.customwidgets.app.ui.preview.ComposeWidgetPreview
-import com.customwidgets.app.ui.theme.LiquidGlassBackground
-import com.customwidgets.app.ui.theme.LiquidGlassButton
-import com.customwidgets.app.ui.theme.LiquidGlassDefaults
-import com.customwidgets.app.ui.theme.LiquidGlassSurface
 import com.customwidgets.app.util.FoldableUtils
-import com.customwidgets.app.ui.theme.SquircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WidgetGalleryScreen(
     viewModel: WidgetGalleryViewModel,
     onCreateWidgetClicked: () -> Unit,
+    onMcpClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     onWidgetClicked: (Long) -> Unit
 ) {
@@ -66,59 +68,62 @@ fun WidgetGalleryScreen(
     var widgetToDelete by remember { mutableStateOf<WidgetMetadata?>(null) }
     val gridColumns = FoldableUtils.getGalleryGridColumns()
 
-    LiquidGlassBackground {
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Custom Widgets",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                    },
-                    actions = {
-                        IconButton(onClick = onSettingsClicked) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            MediumTopAppBar(
+                title = {
+                    Text(
+                        text = "커스텀 위젯",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                actions = {
+                    IconButton(onClick = onMcpClicked) {
+                        Icon(Icons.Default.Build, contentDescription = "MCP Servers")
+                    }
+                    IconButton(onClick = onSettingsClicked) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = onCreateWidgetClicked,
-                    containerColor = Color(0xFF6200EE),
-                    shape = SquircleShape(16.dp)
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onCreateWidgetClicked,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("위젯 만들기", fontWeight = FontWeight.Bold) },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                shape = MaterialTheme.shapes.large
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (widgets.isEmpty()) {
+                EmptyExpressiveState(onCreateClicked = onCreateWidgetClicked)
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(gridColumns),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Create Widget", tint = Color.White)
-                }
-            }
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                if (widgets.isEmpty()) {
-                    EmptyGalleryState(onCreateClicked = onCreateWidgetClicked)
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(gridColumns),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    ) {
-                        items(widgets, key = { it.id }) { widget ->
-                            LiquidGlassWidgetCard(
-                                widget = widget,
-                                onClick = { onWidgetClicked(widget.id) },
-                                onDeleteClick = { widgetToDelete = widget }
-                            )
-                        }
+                    items(widgets, key = { it.id }) { widget ->
+                        ExpressiveWidgetCard(
+                            widget = widget,
+                            onClick = { onWidgetClicked(widget.id) },
+                            onDeleteClick = { widgetToDelete = widget }
+                        )
                     }
                 }
             }
@@ -129,7 +134,7 @@ fun WidgetGalleryScreen(
         AlertDialog(
             onDismissRequest = { widgetToDelete = null },
             title = { Text("위젯 삭제", fontWeight = FontWeight.Bold) },
-            text = { Text("\"${target.name}\" 위젯을 삭제하시겠습니까?") },
+            text = { Text("\"${target.name}\" 위젯을 홈 화면 및 목록에서 삭제하시겠습니까?") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -137,20 +142,21 @@ fun WidgetGalleryScreen(
                         widgetToDelete = null
                     }
                 ) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text("삭제", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { widgetToDelete = null }) {
                     Text("취소")
                 }
-            }
+            },
+            shape = MaterialTheme.shapes.extraLarge
         )
     }
 }
 
 @Composable
-private fun LiquidGlassWidgetCard(
+private fun ExpressiveWidgetCard(
     widget: WidgetMetadata,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -163,18 +169,25 @@ private fun LiquidGlassWidgetCard(
         }
     }
 
-    LiquidGlassSurface(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
             .clickable(onClick = onClick),
-        cornerRadius = 20.dp
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // Live Preview Box
-            Box(
+            // Live Preview Card
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.3f)
+                    .aspectRatio(1.3f),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerLowest
             ) {
                 if (definition != null) {
                     ComposeWidgetPreview(
@@ -183,12 +196,10 @@ private fun LiquidGlassWidgetCard(
                     )
                 } else {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF2C2C2C)),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Preview Error", color = Color.Gray, fontSize = 11.sp)
+                        Text("미리보기 오류", color = Color.Gray, fontSize = 11.sp)
                     }
                 }
             }
@@ -204,21 +215,22 @@ private fun LiquidGlassWidgetCard(
                     Text(
                         text = widget.name,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "${widget.sizeLabel} grid",
-                        fontSize = 11.sp,
-                        color = Color(0xFFBB86FC)
+                        text = "${widget.sizeLabel} 그리드",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
                     )
                 }
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Delete",
-                        tint = Color.LightGray.copy(alpha = 0.7f)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -227,7 +239,7 @@ private fun LiquidGlassWidgetCard(
 }
 
 @Composable
-private fun EmptyGalleryState(onCreateClicked: () -> Unit) {
+private fun EmptyExpressiveState(onCreateClicked: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -235,34 +247,37 @@ private fun EmptyGalleryState(onCreateClicked: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        LiquidGlassSurface(
-            modifier = Modifier.padding(16.dp),
-            cornerRadius = 32.dp
+        OutlinedCard(
+            modifier = Modifier.fillMaxWidth(0.9f),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            )
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "✨", fontSize = 48.sp)
-                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = "🎨", fontSize = 56.sp)
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "저장된 위젯이 없습니다",
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "원하는 크기와 내용을 입력하면\nAI가 나만의 홈 화면 위젯을 제작해드립니다.",
+                    text = "원하는 크기와 내용을 입력하면\nAI와 MCP 도구가 결합된 나만의 홈 화면 위젯을 제작해드립니다.",
                     textAlign = TextAlign.Center,
                     fontSize = 13.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(20.dp))
-                LiquidGlassButton(
+                Spacer(modifier = Modifier.height(24.dp))
+                FilledTonalButton(
                     onClick = onCreateClicked,
-                    isPrimary = true
+                    shape = MaterialTheme.shapes.medium
                 ) {
-                    Text("첫 위젯 만들기", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("첫 위젯 만들기", fontWeight = FontWeight.Bold)
                 }
             }
         }
