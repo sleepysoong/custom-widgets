@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
@@ -97,12 +98,12 @@ fun GlassMediumTopAppBar(
 fun GlassBottomBar(
     selectedTabIndex: Int,
     tabsCount: Int,
+    backdrop: Backdrop?,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
     if (tabsCount <= 0) return
 
-    val backdrop = LocalGlassBackdrop.current
     val hasFullGlassEffects = LocalGlassMode.current == GlassMode.Full
     val accent = MaterialTheme.colorScheme.primary
     val capsule = Capsule()

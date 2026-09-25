@@ -46,7 +46,7 @@ fun GlassTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalGlassMode provides mode, content = content)
 }
 
-/** Draws the real page content as the glass source over a solid white base. */
+/** Records a separate background sibling so glass descendants never sample themselves. */
 @Composable
 fun GlassHost(
     modifier: Modifier = Modifier,
@@ -68,6 +68,7 @@ fun GlassHost(
         Box(
             Modifier.matchParentSize()
                 .then(backgroundShape?.let { Modifier.clip(it) } ?: Modifier)
+                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
                 .background(Color.White)
         )
         CompositionLocalProvider(
@@ -75,13 +76,6 @@ fun GlassHost(
             LocalContentColor provides colors.onBackground
         ) { content() }
     }
-}
-
-/** Attach only to the page layer that should appear behind floating glass surfaces. */
-@Composable
-internal fun Modifier.glassSourceLayer(): Modifier {
-    val backdrop = LocalGlassBackdrop.current
-    return if (backdrop == null) this else layerBackdrop(backdrop)
 }
 
 /** Background only: content is drawn after this modifier, so text never enters the shader. */

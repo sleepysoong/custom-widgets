@@ -926,3 +926,24 @@ git -C /root/auto-band-selector show 6aa9ae9c418d91e0c5979dc98faa196842b26dec
 | 렌더링 순환 | 기록할 내용이 다시 자기 배경을 읽는 관계; native crash 원인이 될 수 있음 |
 | semantics | 화면 읽기·자동화가 이해하는 역할, 이름, 값, 상태 |
 | fallback | 효과가 없을 때도 기능·가독성을 보장하는 대체 표면 |
+
+## 부록 C. 2026-09-25 시작 화면 렌더링 순환 수정
+
+흰색 테마 개편 이후 앱 시작 시 종료된다는 보고를 받았다. 기기 로그는 확보하지 못했지만,
+코드에서 `NavHost.layerBackdrop(A)` 내부의 카드가 `drawBackdrop(A)`를 호출하는
+자기 참조를 확인하여 제거했다. 실제 사용자 기기의 종료 원인과 일치하는지는 설치 확인이 필요하다.
+
+현재 소스 연결은 다음처럼 유지해야 한다.
+
+1. `GlassTheme.kt`의 `GlassHost`는 **배경 전용 형제 Box**를 A에 기록한다.
+   `LocalGlassBackdrop`은 A만 제공하며, 이 Box에는 유리 컨트롤을 넣지 않는다.
+2. `MainActivity.kt`는 별도 `navigationBackdrop` B에 NavHost를 기록한다.
+   NavHost 내부 컨트롤은 A를 읽는다. B를 화면 내부에 CompositionLocal로 제공하면 안 된다.
+3. `GlassSurfaces.kt`의 `GlassBottomBar`는 필수 `backdrop` 인자로 B를 받는다.
+   하단 바는 NavHost 바깥의 형제이므로 B에 다시 기록되지 않는다.
+4. Dialog는 자기 `GlassHost`의 배경 Box를 사용한다. 별도 창에서 Activity 배경의
+   좌표나 레이어를 재사용하지 않는다.
+
+의존성은 `A(흰 배경) → B(화면과 A를 읽는 컨트롤) → 하단 바`다.
+`layerBackdrop(X)`가 기록하는 하위 트리에서 X를 직접 또는 간접적으로 읽는 코드를
+추가하지 않는다. 이 규칙은 Kotlin 컴파일 성공만으로 확인할 수 없다.

@@ -45,7 +45,8 @@ import com.customwidgets.app.data.repository.WidgetRepository
 import com.customwidgets.app.ui.create.CreateWidgetScreen
 import com.customwidgets.app.ui.create.CreateWidgetViewModel
 import com.customwidgets.app.ui.glass.GlassBottomBar
-import com.customwidgets.app.ui.glass.glassSourceLayer
+import com.customwidgets.app.ui.glass.GlassMode
+import com.customwidgets.app.ui.glass.LocalGlassMode
 import com.customwidgets.app.ui.gallery.WidgetDetailScreen
 import com.customwidgets.app.ui.gallery.WidgetGalleryScreen
 import com.customwidgets.app.ui.gallery.WidgetGalleryViewModel
@@ -54,6 +55,8 @@ import com.customwidgets.app.ui.mcp.McpServerViewModel
 import com.customwidgets.app.ui.settings.ApiSettingsScreen
 import com.customwidgets.app.ui.settings.ApiSettingsViewModel
 import com.customwidgets.app.ui.theme.CustomWidgetsTheme
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -100,11 +103,23 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
+                // Only the sibling bottom bar consumes this recording. Page controls use
+                // GlassHost's separate background, avoiding a GraphicsLayer dependency cycle.
+                val navigationBackdrop = if (LocalGlassMode.current != GlassMode.Off) {
+                    rememberLayerBackdrop {
+                        drawRect(Color.White)
+                        drawContent()
+                    }
+                } else null
+
                 Box(Modifier.fillMaxSize()) {
                     NavHost(
                         navController = navController,
                         startDestination = "gallery",
-                        modifier = Modifier.fillMaxSize().glassSourceLayer()
+                        modifier = Modifier.fillMaxSize().then(
+                            if (navigationBackdrop != null) Modifier.layerBackdrop(navigationBackdrop)
+                            else Modifier
+                        )
                     ) {
                         composable("gallery") {
                             val galleryViewModel: WidgetGalleryViewModel = hiltViewModel()
@@ -169,6 +184,7 @@ class MainActivity : ComponentActivity() {
                                 selectedTabIndex = NAV_ITEMS.indexOfFirst { it.route == currentRoute }
                                     .coerceAtLeast(0),
                                 tabsCount = NAV_ITEMS.size,
+                                backdrop = navigationBackdrop,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 NAV_ITEMS.forEach { item ->
