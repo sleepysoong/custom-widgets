@@ -56,4 +56,9 @@
     <string name="error_rate_limited">API 요청 한도에 도달했습니다. 잠시 후 다시 시도해주세요.</string>
     <string name="error_generation_failed">위젯 생성에 실패했습니다</string>
     <string name="btn_retry">다시 시도</string>
+    <string name="glass_appearance_title">시각 효과</string>
+    <string name="glass_appearance_description">유리 효과의 강도를 선택하세요. 효과를 꺼도 모든 기능을 사용할 수 있습니다.</string>
+    <string name="glass_automatic">자동 · 기기에 맞는 리퀴드 글래스</string>
+    <string name="glass_reduced">간소화 · 부드러운 흐림</string>
+    <string name="glass_off">끄기 · 선명한 불투명 표면</string>
 </resources>

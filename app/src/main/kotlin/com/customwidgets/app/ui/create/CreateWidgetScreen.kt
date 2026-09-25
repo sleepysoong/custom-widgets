@@ -2,6 +2,9 @@ package com.customwidgets.app.ui.create
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,23 +26,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Button
+import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
+import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import com.customwidgets.app.ui.glass.GlassFilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.customwidgets.app.ui.glass.GlassIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
+import com.customwidgets.app.ui.glass.GlassSecondaryButton
+import com.customwidgets.app.ui.glass.GlassTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import com.customwidgets.app.ui.glass.GlassSurface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.customwidgets.app.ui.glass.GlassTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -91,12 +92,12 @@ fun CreateWidgetScreen(
     val isFoldExpanded = FoldableUtils.isExpandedScreen()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
-            TopAppBar(
+            GlassTopAppBar(
                 title = { Text("위젯 만들기", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    GlassIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -183,7 +184,7 @@ private fun FoldableDualPaneWizard(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Left Pane: Controls & Description
-        ElevatedCard(
+        GlassCard(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
@@ -205,7 +206,7 @@ private fun FoldableDualPaneWizard(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
+                GlassTextField(
                     value = uiState.description,
                     onValueChange = { viewModel.updateDescription(it) },
                     label = { Text("위젯 설명 입력") },
@@ -225,7 +226,7 @@ private fun FoldableDualPaneWizard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     TEMPLATE_PROMPTS.take(3).forEach { (label, prompt) ->
-                        FilterChip(
+                        GlassFilterChip(
                             selected = uiState.description == prompt,
                             onClick = { viewModel.updateDescription(prompt) },
                             label = { Text(label, fontSize = 11.sp) }
@@ -235,7 +236,7 @@ private fun FoldableDualPaneWizard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
+                GlassButton(
                     onClick = { viewModel.generateWidget() },
                     enabled = uiState.description.isNotBlank() && uiState.generationState !is GenerationState.Loading,
                     modifier = Modifier.fillMaxWidth(),
@@ -248,7 +249,7 @@ private fun FoldableDualPaneWizard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
+                GlassTextField(
                     value = uiState.widgetName,
                     onValueChange = { viewModel.updateWidgetName(it) },
                     label = { Text("위젯 이름") },
@@ -258,7 +259,7 @@ private fun FoldableDualPaneWizard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                FilledTonalButton(
+                GlassButton(
                     onClick = {
                         viewModel.saveWidget(appWidgetId) { id ->
                             onWidgetCreated(id)
@@ -274,7 +275,7 @@ private fun FoldableDualPaneWizard(
         }
 
         // Right Pane: Live Material 3 Preview
-        ElevatedCard(
+        GlassCard(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
@@ -306,7 +307,7 @@ private fun FoldableDualPaneWizard(
                     is GenerationState.Streaming -> {
                         Text("스트리밍 중...", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Surface(
+                        GlassSurface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(180.dp),
@@ -315,7 +316,7 @@ private fun FoldableDualPaneWizard(
                         ) {
                             Text(
                                 text = genState.partialText.takeLast(400),
-                                color = Color(0xFF00FF00),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 10.sp,
                                 modifier = Modifier.padding(12.dp)
@@ -323,7 +324,7 @@ private fun FoldableDualPaneWizard(
                         }
                     }
                     is GenerationState.Success -> {
-                        Surface(
+                        GlassSurface(
                             modifier = Modifier
                                 .fillMaxWidth(0.85f)
                                 .aspectRatio(1.3f),
@@ -332,7 +333,7 @@ private fun FoldableDualPaneWizard(
                         ) {
                             ComposeWidgetPreview(
                                 definition = genState.definition,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize().padding(8.dp)
                             )
                         }
                     }
@@ -369,14 +370,14 @@ private fun SizeSelectionStep(
         columns = GridCells.Fixed(gridColumns),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().selectableGroup()
     ) {
         items(SIZE_OPTIONS) { opt ->
             val isSelected = opt.width == selectedWidth && opt.height == selectedHeight
-            ElevatedCard(
+            GlassCard(
                 modifier = Modifier
                     .aspectRatio(1f)
-                    .clickable { onSelectSize(opt.width, opt.height) },
+                    .selectable(selected = isSelected, role = Role.RadioButton) { onSelectSize(opt.width, opt.height) },
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
@@ -388,7 +389,7 @@ private fun SizeSelectionStep(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = opt.label,
+                            text = if (isSelected) "✓ ${opt.label}" else opt.label,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             fontSize = 16.sp,
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
@@ -434,7 +435,7 @@ private fun DescriptionStep(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             TEMPLATE_PROMPTS.take(2).forEach { (label, prompt) ->
-                FilterChip(
+                GlassFilterChip(
                     selected = description == prompt,
                     onClick = { onDescriptionChanged(prompt) },
                     label = { Text(label) }
@@ -444,7 +445,7 @@ private fun DescriptionStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        GlassTextField(
             value = description,
             onValueChange = onDescriptionChanged,
             placeholder = { Text("원하는 위젯의 내용을 설명해주세요 (예: 시계와 배터리가 있는 다크 모드 위젯)") },
@@ -461,10 +462,10 @@ private fun DescriptionStep(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            OutlinedButton(onClick = onBackClicked, shape = MaterialTheme.shapes.medium) {
+            GlassSecondaryButton(onClick = onBackClicked, shape = MaterialTheme.shapes.medium) {
                 Text("이전")
             }
-            Button(
+            GlassButton(
                 onClick = onGenerateClicked,
                 enabled = description.isNotBlank(),
                 shape = MaterialTheme.shapes.medium
@@ -512,7 +513,7 @@ private fun GenerationAndPreviewStep(
                 Column {
                     Text("생성 중... / Streaming:", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Surface(
+                    GlassSurface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(160.dp),
@@ -521,7 +522,7 @@ private fun GenerationAndPreviewStep(
                     ) {
                         Text(
                             text = genState.partialText.takeLast(500),
-                            color = Color(0xFF00FF00),
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
                             modifier = Modifier.padding(12.dp)
@@ -530,7 +531,7 @@ private fun GenerationAndPreviewStep(
                 }
             }
             is GenerationState.Error -> {
-                OutlinedCard(
+                GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.outlinedCardColors(
@@ -550,7 +551,7 @@ private fun GenerationAndPreviewStep(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                FilledTonalButton(onClick = onRegenerate, shape = MaterialTheme.shapes.medium) {
+                GlassButton(onClick = onRegenerate, shape = MaterialTheme.shapes.medium) {
                     Text("다시 시도")
                 }
             }
@@ -562,7 +563,7 @@ private fun GenerationAndPreviewStep(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Surface(
+                GlassSurface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height((uiState.heightCells * 80).coerceIn(120, 300).dp),
@@ -571,13 +572,13 @@ private fun GenerationAndPreviewStep(
                 ) {
                     ComposeWidgetPreview(
                         definition = genState.definition,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().padding(8.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
+                GlassTextField(
                     value = uiState.widgetName,
                     onValueChange = onNameChanged,
                     label = { Text("위젯 이름") },
@@ -591,14 +592,14 @@ private fun GenerationAndPreviewStep(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
+                    GlassSecondaryButton(
                         onClick = { onToggleJsonEditor(!uiState.isJsonEditorOpen) },
                         modifier = Modifier.weight(1f),
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Text(if (uiState.isJsonEditorOpen) "JSON 닫기" else "JSON 편집")
                     }
-                    FilledTonalButton(
+                    GlassButton(
                         onClick = onRegenerate,
                         modifier = Modifier.weight(1f),
                         shape = MaterialTheme.shapes.medium
@@ -609,7 +610,7 @@ private fun GenerationAndPreviewStep(
 
                 AnimatedVisibility(visible = uiState.isJsonEditorOpen) {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        OutlinedTextField(
+                        GlassTextField(
                             value = uiState.editableJson,
                             onValueChange = onJsonChanged,
                             label = { Text("Widget JSON DSL") },
@@ -623,7 +624,7 @@ private fun GenerationAndPreviewStep(
                             shape = MaterialTheme.shapes.medium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = onApplyJson, shape = MaterialTheme.shapes.medium) {
+                        GlassButton(onClick = onApplyJson, shape = MaterialTheme.shapes.medium) {
                             Text("JSON 적용")
                         }
                     }
@@ -635,10 +636,10 @@ private fun GenerationAndPreviewStep(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    OutlinedButton(onClick = onBackClicked, shape = MaterialTheme.shapes.medium) {
+                    GlassSecondaryButton(onClick = onBackClicked, shape = MaterialTheme.shapes.medium) {
                         Text("이전")
                     }
-                    Button(onClick = onSave, shape = MaterialTheme.shapes.medium) {
+                    GlassButton(onClick = onSave, shape = MaterialTheme.shapes.medium) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(modifier = Modifier.padding(4.dp))
                         Text("위젯 저장", fontWeight = FontWeight.Bold)
@@ -658,11 +659,12 @@ private fun SaveConfirmationStep(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        ElevatedCard(
+        GlassCard(
             modifier = Modifier.fillMaxWidth(0.9f),
             shape = MaterialTheme.shapes.extraLarge,
             colors = CardDefaults.elevatedCardColors(
@@ -695,7 +697,7 @@ private fun SaveConfirmationStep(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = onDoneClicked, shape = MaterialTheme.shapes.medium) {
+                GlassButton(onClick = onDoneClicked, shape = MaterialTheme.shapes.medium) {
                     Text("완료", fontWeight = FontWeight.Bold)
                 }
             }

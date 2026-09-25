@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -17,7 +19,7 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
+import com.customwidgets.app.ui.glass.GlassNavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
@@ -85,12 +87,12 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = MaterialTheme.colorScheme.background,
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
                     bottomBar = {
                         val isBottomBarVisible = currentRoute in listOf("gallery", "create", "mcp", "settings")
                         if (isBottomBarVisible) {
-                            NavigationBar(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            GlassNavigationBar(
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ) {
                                 NAV_ITEMS.forEach { item ->
@@ -134,7 +136,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = "gallery",
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
                     ) {
                         composable("gallery") {
                             val galleryViewModel: WidgetGalleryViewModel = hiltViewModel()

@@ -19,21 +19,20 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
+import com.customwidgets.app.ui.glass.GlassDialog
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
+import com.customwidgets.app.ui.glass.GlassExtendedFab
+import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.customwidgets.app.ui.glass.GlassIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
-import androidx.compose.material3.OutlinedCard
+import com.customwidgets.app.ui.glass.GlassMediumTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import com.customwidgets.app.ui.glass.GlassSurface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.customwidgets.app.ui.glass.GlassSecondaryButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -69,9 +68,9 @@ fun WidgetGalleryScreen(
     val gridColumns = FoldableUtils.getGalleryGridColumns()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
-            MediumTopAppBar(
+            GlassMediumTopAppBar(
                 title = {
                     Text(
                         text = "커스텀 위젯",
@@ -79,20 +78,20 @@ fun WidgetGalleryScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onMcpClicked) {
+                    GlassIconButton(onClick = onMcpClicked) {
                         Icon(Icons.Default.Build, contentDescription = "MCP Servers")
                     }
-                    IconButton(onClick = onSettingsClicked) {
+                    GlassIconButton(onClick = onSettingsClicked) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            GlassExtendedFab(
                 onClick = onCreateWidgetClicked,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("위젯 만들기", fontWeight = FontWeight.Bold) },
@@ -131,12 +130,12 @@ fun WidgetGalleryScreen(
     }
 
     widgetToDelete?.let { target ->
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { widgetToDelete = null },
             title = { Text("위젯 삭제", fontWeight = FontWeight.Bold) },
             text = { Text("\"${target.name}\" 위젯을 홈 화면 및 목록에서 삭제하시겠습니까?") },
             confirmButton = {
-                TextButton(
+                GlassSecondaryButton(
                     onClick = {
                         viewModel.deleteWidget(target.id)
                         widgetToDelete = null
@@ -146,7 +145,7 @@ fun WidgetGalleryScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { widgetToDelete = null }) {
+                GlassSecondaryButton(onClick = { widgetToDelete = null }) {
                     Text("취소")
                 }
             },
@@ -169,7 +168,7 @@ private fun ExpressiveWidgetCard(
         }
     }
 
-    ElevatedCard(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
@@ -178,11 +177,10 @@ private fun ExpressiveWidgetCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             // Live Preview Card
-            Surface(
+            GlassSurface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1.3f),
@@ -226,7 +224,7 @@ private fun ExpressiveWidgetCard(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                IconButton(onClick = onDeleteClick) {
+                GlassIconButton(onClick = onDeleteClick) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Delete",
@@ -247,7 +245,7 @@ private fun EmptyExpressiveState(onCreateClicked: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        OutlinedCard(
+        GlassCard(
             modifier = Modifier.fillMaxWidth(0.9f),
             shape = MaterialTheme.shapes.extraLarge,
             colors = CardDefaults.outlinedCardColors(
@@ -273,7 +271,7 @@ private fun EmptyExpressiveState(onCreateClicked: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                FilledTonalButton(
+                GlassButton(
                     onClick = onCreateClicked,
                     shape = MaterialTheme.shapes.medium
                 ) {

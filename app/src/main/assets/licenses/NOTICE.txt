@@ -1,0 +1,6 @@
+Custom Widgets uses Backdrop 2.0.1 and Shapes 1.2.1 by Kyant0.
+https://github.com/Kyant0/AndroidLiquidGlass
+https://github.com/Kyant0/Shapes
+Both dependencies are licensed under Apache License 2.0; the license is included
+in Backdrop-Apache-2.0.txt. App glass wrappers are implemented in this project;
+upstream catalog components are references, not vendored source copies.

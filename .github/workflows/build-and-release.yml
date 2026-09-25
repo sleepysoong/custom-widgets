@@ -54,6 +54,12 @@ jobs:
       - name: Grant Execute Permission to Gradlew
         run: chmod +x gradlew
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install compile SDK
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+
       - name: Build Signed Release APK
         run: ./gradlew :app:assembleRelease --no-daemon
 

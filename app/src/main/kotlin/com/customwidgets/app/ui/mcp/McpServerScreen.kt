@@ -18,30 +18,33 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.customwidgets.app.ui.glass.GlassDialog
+import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
+import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import com.customwidgets.app.ui.glass.GlassExtendedFab
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.customwidgets.app.ui.glass.GlassIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.customwidgets.app.ui.glass.GlassTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import com.customwidgets.app.ui.glass.GlassSurface
+import com.customwidgets.app.ui.glass.GlassSwitch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.customwidgets.app.ui.glass.GlassSecondaryButton
+import com.customwidgets.app.ui.glass.GlassTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -58,16 +61,17 @@ fun McpServerScreen(
     val servers by viewModel.servers.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
-    var newServerName by remember { mutableStateOf("") }
-    var newServerUrl by remember { mutableStateOf("") }
-    var newServerApiKey by remember { mutableStateOf("") }
+    var newServerName by rememberSaveable { mutableStateOf("") }
+    var newServerUrl by rememberSaveable { mutableStateOf("") }
+    var newServerApiKey by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
+            GlassTopAppBar(
                 title = { Text("MCP 서버 관리", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    GlassIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -77,7 +81,7 @@ fun McpServerScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            GlassExtendedFab(
                 onClick = { viewModel.toggleAddDialog(true) },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("서버 추가") },
@@ -101,7 +105,7 @@ fun McpServerScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
-                        Surface(
+                        GlassSurface(
                             color = MaterialTheme.colorScheme.secondaryContainer,
                             shape = MaterialTheme.shapes.medium,
                             modifier = Modifier.fillMaxWidth()
@@ -140,25 +144,25 @@ fun McpServerScreen(
 
     // Add Server Dialog
     if (uiState.isAddDialogOpen) {
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { viewModel.toggleAddDialog(false) },
             title = { Text("새 MCP 서버 등록", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
+                    GlassTextField(
                         value = newServerName,
                         onValueChange = { newServerName = it },
                         label = { Text("서버 이름 (예: WeatherHub)") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
+                    GlassTextField(
                         value = newServerUrl,
                         onValueChange = { newServerUrl = it },
                         label = { Text("서버 URL (HTTP/SSE)") },
                         placeholder = { Text("https://mcp.example.com/sse") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
+                    GlassTextField(
                         value = newServerApiKey,
                         onValueChange = { newServerApiKey = it },
                         label = { Text("API Key (선택)") },
@@ -167,7 +171,7 @@ fun McpServerScreen(
                 }
             },
             confirmButton = {
-                Button(
+                GlassButton(
                     onClick = {
                         viewModel.addServer(newServerName, newServerUrl, newServerApiKey)
                         newServerName = ""
@@ -180,7 +184,7 @@ fun McpServerScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.toggleAddDialog(false) }) {
+                GlassSecondaryButton(onClick = { viewModel.toggleAddDialog(false) }) {
                     Text("취소")
                 }
             }
@@ -199,7 +203,7 @@ private fun McpServerCard(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    ElevatedCard(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -221,8 +225,9 @@ private fun McpServerCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Switch(
+                GlassSwitch(
                     checked = server.isEnabled,
+                    modifier = Modifier.semantics { contentDescription = "${server.name} 사용" },
                     onCheckedChange = onToggleEnabled
                 )
             }
@@ -234,7 +239,7 @@ private fun McpServerCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(
+                GlassSecondaryButton(
                     onClick = { isExpanded = !isExpanded }
                 ) {
                     Icon(Icons.Default.Build, contentDescription = null, modifier = Modifier.height(16.dp))
@@ -246,14 +251,17 @@ private fun McpServerCard(
                 }
 
                 Row {
-                    IconButton(onClick = onTestClicked) {
+                    GlassIconButton(
+                        onClick = onTestClicked, enabled = !isTesting,
+                        modifier = Modifier.semantics { contentDescription = "연결 테스트" }
+                    ) {
                         if (isTesting) {
                             CircularProgressIndicator(modifier = Modifier.height(16.dp))
                         } else {
                             Icon(Icons.Default.Refresh, contentDescription = "Test connection")
                         }
                     }
-                    IconButton(onClick = onDeleteClicked) {
+                    GlassIconButton(onClick = onDeleteClicked) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -262,7 +270,7 @@ private fun McpServerCard(
             AnimatedVisibility(visible = isExpanded && tools.isNotEmpty()) {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     tools.forEach { tool ->
-                        Surface(
+                        GlassSurface(
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             shape = MaterialTheme.shapes.small,
                             modifier = Modifier
@@ -315,7 +323,7 @@ private fun EmptyMcpState(onAddClicked: () -> Unit) {
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onAddClicked) {
+        GlassButton(onClick = onAddClicked) {
             Text("MCP 서버 추가하기")
         }
     }

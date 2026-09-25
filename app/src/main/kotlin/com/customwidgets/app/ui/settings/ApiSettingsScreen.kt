@@ -15,24 +15,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
+import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
+import com.customwidgets.app.ui.glass.GlassFilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.customwidgets.app.ui.glass.GlassIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
+import com.customwidgets.app.ui.glass.GlassTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
+import com.customwidgets.app.ui.glass.GlassSlider
+import com.customwidgets.app.ui.glass.GlassSurface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.customwidgets.app.ui.glass.GlassSecondaryButton
+import com.customwidgets.app.ui.glass.GlassTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,6 +39,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -64,12 +64,12 @@ fun ApiSettingsScreen(
     val context = LocalContext.current
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
-            TopAppBar(
+            GlassTopAppBar(
                 title = { Text("OpenAI API 설정", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    GlassIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -86,8 +86,11 @@ fun ApiSettingsScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            com.customwidgets.app.ui.glass.GlassAppearanceSettings()
+            Spacer(Modifier.height(16.dp))
+
             // Info Card
-            OutlinedCard(
+            GlassCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 colors = CardDefaults.outlinedCardColors(
@@ -107,7 +110,7 @@ fun ApiSettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(
+                    GlassSecondaryButton(
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://platform.openai.com/api-keys"))
                             context.startActivity(intent)
@@ -121,7 +124,7 @@ fun ApiSettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Settings Form Card
-            ElevatedCard(
+            GlassCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 colors = CardDefaults.elevatedCardColors(
@@ -136,13 +139,13 @@ fun ApiSettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
+                    GlassTextField(
                         value = uiState.apiKey,
                         onValueChange = { viewModel.setApiKey(it) },
                         placeholder = { Text("sk-proj-...") },
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
-                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            GlassIconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                                 Text(if (isPasswordVisible) "숨김" else "표시", fontSize = 12.sp)
                             }
                         },
@@ -162,7 +165,7 @@ fun ApiSettingsScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         AiConfig.SUPPORTED_MODELS.forEach { (modelId, desc) ->
                             val isSelected = uiState.model == modelId
-                            FilterChip(
+                            GlassFilterChip(
                                 selected = isSelected,
                                 onClick = { viewModel.setModel(modelId) },
                                 label = {
@@ -184,8 +187,9 @@ fun ApiSettingsScreen(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
-                    Slider(
+                    GlassSlider(
                         value = uiState.temperature,
+                        modifier = Modifier.semantics { contentDescription = "창의성" },
                         onValueChange = { viewModel.setTemperature(it) },
                         valueRange = 0.0f..1.5f,
                         steps = 14
@@ -193,7 +197,7 @@ fun ApiSettingsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
+                    GlassTextField(
                         value = uiState.maxTokens.toString(),
                         onValueChange = { str ->
                             str.toIntOrNull()?.let { viewModel.setMaxTokens(it) }
@@ -212,7 +216,7 @@ fun ApiSettingsScreen(
             val testMsg = uiState.testMessage
             if (testMsg != null) {
                 val isSuccess = uiState.testSuccess == true
-                Surface(
+                GlassSurface(
                     color = if (isSuccess) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
@@ -240,7 +244,7 @@ fun ApiSettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                FilledTonalButton(
+                GlassButton(
                     onClick = { viewModel.testConnection() },
                     enabled = !uiState.isTesting,
                     shape = MaterialTheme.shapes.medium,
@@ -248,12 +252,12 @@ fun ApiSettingsScreen(
                 ) {
                     if (uiState.isTesting) {
                         CircularProgressIndicator(modifier = Modifier.height(16.dp))
-                    } else {
-                        Text("연결 테스트")
+                        Spacer(Modifier.padding(4.dp))
                     }
+                    Text("연결 테스트")
                 }
 
-                Button(
+                GlassButton(
                     onClick = { viewModel.saveSettings() },
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.weight(1f)

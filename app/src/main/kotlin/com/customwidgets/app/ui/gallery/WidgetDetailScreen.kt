@@ -13,20 +13,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.customwidgets.app.ui.glass.GlassIconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.customwidgets.app.ui.glass.GlassSecondaryButton
+import com.customwidgets.app.ui.glass.GlassTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import com.customwidgets.app.ui.glass.GlassSurface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.customwidgets.app.ui.glass.GlassTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,12 +66,12 @@ fun WidgetDetailScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
-            TopAppBar(
+            GlassTopAppBar(
                 title = { Text(widget?.name ?: "위젯 상세정보", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    GlassIconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -106,7 +105,7 @@ fun WidgetDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                ElevatedCard(
+                GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.elevatedCardColors(
@@ -130,7 +129,7 @@ fun WidgetDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                ElevatedCard(
+                GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
                     colors = CardDefaults.elevatedCardColors(
@@ -149,12 +148,12 @@ fun WidgetDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (isEditingJson) {
-                    ElevatedCard(
+                    GlassCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            OutlinedTextField(
+                            GlassTextField(
                                 value = editableJson,
                                 onValueChange = { editableJson = it },
                                 label = { Text("Widget JSON DSL") },
@@ -172,14 +171,14 @@ fun WidgetDetailScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                OutlinedButton(
+                                GlassSecondaryButton(
                                     onClick = { isEditingJson = false },
                                     modifier = Modifier.weight(1f),
                                     shape = MaterialTheme.shapes.medium
                                 ) {
                                     Text("취소")
                                 }
-                                Button(
+                                GlassButton(
                                     onClick = {
                                         try {
                                             WidgetDefinition.fromJson(editableJson)
@@ -202,7 +201,7 @@ fun WidgetDetailScreen(
                         }
                     }
                 } else {
-                    FilledTonalButton(
+                    GlassButton(
                         onClick = { isEditingJson = true },
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium

@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -20,7 +19,7 @@ val verName = versionProps.getProperty("versionName", "1.0.0")
 
 android {
     namespace = "com.customwidgets.app"
-    compileSdk = 35
+    compileSdk = 37
 
     signingConfigs {
         create("release") {
@@ -63,9 +62,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     buildFeatures {
         compose = true
@@ -97,13 +93,15 @@ android {
     }
 }
 
-tasks.configureEach {
-    if (name.contains("AarMetadata")) {
-        enabled = false
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
 dependencies {
+    implementation(libs.kyant.backdrop)
+    implementation(libs.kyant.shapes)
     // Core & Activity
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -152,6 +150,14 @@ dependencies {
     // Background & Security
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.security.crypto)
+
+    // Instrumentation uses the same Compose runtime as the app.
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Testing
     testImplementation(libs.junit)

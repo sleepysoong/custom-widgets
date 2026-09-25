@@ -85,6 +85,10 @@ fun CustomWidgetsTheme(
         colorScheme = colorScheme,
         shapes = ExpressiveShapes,
         typography = Typography,
-        content = content
+        content = {
+            com.customwidgets.app.ui.glass.GlassTheme {
+                com.customwidgets.app.ui.glass.GlassHost { content() }
+            }
+        }
     )
 }
