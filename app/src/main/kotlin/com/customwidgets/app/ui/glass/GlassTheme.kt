@@ -15,19 +15,18 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
-import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
 
 enum class GlassMode { Full, BlurOnly, Off }
 
@@ -39,7 +38,7 @@ fun resolveGlassMode(sdk: Int): GlassMode = when {
 }
 
 val LocalGlassMode = staticCompositionLocalOf { GlassMode.Off }
-internal val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop?> { null }
+internal val LocalGlassBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 
 @Composable
 fun GlassTheme(content: @Composable () -> Unit) {
@@ -47,7 +46,7 @@ fun GlassTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalGlassMode provides mode, content = content)
 }
 
-/** Source and consumers are siblings. Never put layerBackdrop on the content container. */
+/** Draws the real page content as the glass source over a solid white base. */
 @Composable
 fun GlassHost(
     modifier: Modifier = Modifier,
@@ -57,22 +56,32 @@ fun GlassHost(
 ) {
     val mode = LocalGlassMode.current
     val colors = MaterialTheme.colorScheme
-    val dark = colors.background.luminance() < .5f
-    val base = if (dark) Color(0xFF0B0B0D) else Color(0xFFF7F7F9)
-    val brush = Brush.linearGradient(listOf(base, colors.primaryContainer, base, colors.surfaceContainer))
-    val backdrop = if (mode != GlassMode.Off) rememberLayerBackdrop() else null
+    val backdrop = if (mode != GlassMode.Off) {
+        rememberLayerBackdrop {
+            drawRect(Color.White)
+            drawContent()
+        }
+    } else {
+        null
+    }
     Box(if (fillWindow) modifier.fillMaxSize() else modifier) {
         Box(
             Modifier.matchParentSize()
                 .then(backgroundShape?.let { Modifier.clip(it) } ?: Modifier)
-                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
-                .background(brush)
+                .background(Color.White)
         )
         CompositionLocalProvider(
             LocalGlassBackdrop provides backdrop,
             LocalContentColor provides colors.onBackground
         ) { content() }
     }
+}
+
+/** Attach only to the page layer that should appear behind floating glass surfaces. */
+@Composable
+internal fun Modifier.glassSourceLayer(): Modifier {
+    val backdrop = LocalGlassBackdrop.current
+    return if (backdrop == null) this else layerBackdrop(backdrop)
 }
 
 /** Background only: content is drawn after this modifier, so text never enters the shader. */
@@ -87,9 +96,8 @@ internal fun Modifier.glassMaterial(
     val backdrop = LocalGlassBackdrop.current
     val mode = LocalGlassMode.current
     val scheme = MaterialTheme.colorScheme
-    val dark = scheme.background.luminance() < .5f
     val surface = if (enabled) tint else scheme.surfaceContainerHighest
-    val opacity = if (compact) .78f else if (dark) .72f else .64f
+    val opacity = if (compact) .82f else .70f
     val outline = outlineColor ?: scheme.outlineVariant.copy(alpha = if (enabled) .65f else .35f)
     val material = if (backdrop == null || mode == GlassMode.Off) {
         Modifier.background(surface.copy(alpha = 1f), shape)
@@ -98,8 +106,9 @@ internal fun Modifier.glassMaterial(
             backdrop = backdrop,
             shape = { shape },
             effects = {
-                colorControls(saturation = 1.05f)
-                blur((if (compact || mode == GlassMode.BlurOnly) 4.dp else 8.dp).toPx())
+                vibrancy()
+                colorControls(saturation = 1.04f)
+                blur((if (compact || mode == GlassMode.BlurOnly) 8.dp else 14.dp).toPx())
                 // Only supported corner shapes enter lens; icons and text remain foreground.
                 if (mode == GlassMode.Full && shape is CornerBasedShape) {
                     val radius = minOf(
@@ -107,7 +116,7 @@ internal fun Modifier.glassMaterial(
                         shape.bottomStart.toPx(size, this), shape.bottomEnd.toPx(size, this),
                         size.minDimension / 2f
                     )
-                    lens(minOf(8.dp.toPx(), radius), minOf(12.dp.toPx(), size.minDimension))
+                    lens(minOf(14.dp.toPx(), radius), minOf(22.dp.toPx(), size.minDimension))
                 }
             },
             shadow = null,

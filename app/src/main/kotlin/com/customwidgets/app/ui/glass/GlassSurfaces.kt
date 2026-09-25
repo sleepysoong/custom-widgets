@@ -1,13 +1,17 @@
 package com.customwidgets.app.ui.glass
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -17,6 +21,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.shapes.Capsule
 
 @Composable
 fun GlassCard(
@@ -84,55 +94,90 @@ fun GlassMediumTopAppBar(
 }
 
 @Composable
-fun GlassNavigationBar(
+fun GlassBottomBar(
+    selectedTabIndex: Int,
+    tabsCount: Int,
     modifier: Modifier = Modifier,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable RowScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(50)
-    NavigationBar(
+    if (tabsCount <= 0) return
+
+    val backdrop = LocalGlassBackdrop.current
+    val hasFullGlassEffects = LocalGlassMode.current == GlassMode.Full
+    val accent = MaterialTheme.colorScheme.primary
+    val capsule = Capsule()
+    val selectedPosition = animateFloatAsState(
+        targetValue = selectedTabIndex.coerceIn(0, tabsCount - 1).toFloat(),
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 520f),
+        label = "glass-bottom-bar-selection"
+    ).value
+    val barMaterial = if (backdrop == null) {
+        Modifier.background(Color.White.copy(alpha = 0.96f), capsule)
+    } else {
+        Modifier.drawBackdrop(
+            backdrop = backdrop,
+            shape = { Capsule() },
+            effects = {
+                vibrancy()
+                blur(8.dp.toPx())
+                if (hasFullGlassEffects) lens(24.dp.toPx(), 24.dp.toPx())
+            },
+            onDrawSurface = { drawRect(Color.White.copy(alpha = 0.58f)) }
+        )
+    }
+
+    BoxWithConstraints(
         modifier = modifier
-            .shadow(elevation = 14.dp, shape = shape, clip = false)
-            .glassMaterial(shape, MaterialTheme.colorScheme.surfaceContainerHigh, compact = false),
-        containerColor = Color.Transparent, contentColor = contentColor,
-        tonalElevation = 0.dp,
-        windowInsets = WindowInsets(0, 0, 0, 0),
-        content = content
-    )
-}
+            .height(80.dp)
+            .shadow(
+                elevation = 18.dp,
+                shape = capsule,
+                clip = false,
+                ambientColor = Color(0x140A2448),
+                spotColor = Color(0x220A2448)
+            )
+            .then(barMaterial)
+            .border(1.dp, Color.White.copy(alpha = 0.92f), capsule)
+            .clip(capsule),
+        contentAlignment = androidx.compose.ui.Alignment.CenterStart
+    ) {
+        val tabWidth = (maxWidth - 8.dp) / tabsCount
+        val selectionMaterial = if (backdrop == null) {
+            Modifier.background(accent.copy(alpha = 0.10f), Capsule())
+        } else {
+            Modifier.drawBackdrop(
+                backdrop = backdrop,
+                shape = { Capsule() },
+                effects = {
+                    if (hasFullGlassEffects) {
+                        lens(12.dp.toPx(), 20.dp.toPx())
+                    } else {
+                        blur(4.dp.toPx())
+                    }
+                },
+                highlight = { Highlight.Default.copy(alpha = 0.55f) },
+                onDrawSurface = { drawRect(accent.copy(alpha = 0.13f)) }
+            )
+        }
 
-@Composable
-fun GlassFab(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(24.dp),
-    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
-    content: @Composable () -> Unit
-) {
-    FloatingActionButton(
-        onClick = onClick, modifier = modifier.glassMaterial(shape, containerColor),
-        shape = shape, containerColor = Color.Transparent, contentColor = contentColor,
-        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp), content = content
-    )
-}
-
-@Composable
-fun GlassExtendedFab(
-    onClick: () -> Unit,
-    icon: @Composable () -> Unit,
-    text: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(28.dp),
-    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer
-) {
-    ExtendedFloatingActionButton(
-        onClick = onClick, icon = icon, text = text,
-        modifier = modifier.glassMaterial(shape, containerColor), shape = shape,
-        containerColor = Color.Transparent, contentColor = contentColor,
-        elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
-    )
+        Box(
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.CenterStart)
+                .offset(x = 4.dp + tabWidth * selectedPosition)
+                .width(tabWidth)
+                .height(72.dp)
+                .padding(horizontal = 4.dp, vertical = 4.dp)
+                .then(selectionMaterial)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            content = content
+        )
+    }
 }
 
 /** Each Dialog gets its own source. Never reuse the Activity's graphics layer across windows. */

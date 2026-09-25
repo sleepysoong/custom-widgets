@@ -20,15 +20,13 @@ class GlassCatalogActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var dark by rememberSaveable { mutableStateOf(false) }
-            CustomWidgetsTheme(darkTheme = dark, dynamicColor = false) {
+            CustomWidgetsTheme {
                 Column(
                     Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text("Liquid Glass catalog", style = MaterialTheme.typography.headlineMedium)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        GlassFilterChip(dark, { dark = !dark }, { Text("Dark theme") })
                         GlassSecondaryButton({ recreate() }) { Text("Recreate") }
                     }
                     CatalogControls()

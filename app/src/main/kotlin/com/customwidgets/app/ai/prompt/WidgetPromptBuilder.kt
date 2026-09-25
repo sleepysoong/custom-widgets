@@ -79,7 +79,9 @@ $mcpSection
 - Output MUST be valid JSON only. DO NOT wrap with markdown fences (no ```json).
 - Maximum nesting depth is 5 levels.
 - Maximum total node count is 50 nodes.
-- Use Material 3 color harmonies (primary, surfaceVariant, onSurface, accent).
+- Default to a clean white theme: use solid white backgrounds, near-black text (#101828), and blue accents (#0A67F5 / #EAF2FF).
+- Avoid gray panels and decorative gradients unless the user explicitly asks for a dark or gradient design.
+- Keep text and controls readable against the chosen background.
 - Ensure the widget layout fits the requested grid cell size ratio.
 """.trimIndent()
     }
@@ -97,77 +99,77 @@ Generate the complete JSON WidgetDefinition object adhering strictly to the DSL 
     fun buildFewShotExamples(): List<ChatMessage> {
         val clock2x1 = WidgetDefinition(
             version = 1,
-            background = DslBackground.Solid("#FF1E1E1E"),
+            background = DslBackground.Solid("#FFFFFFFF"),
             updateIntervalMinutes = 15,
             root = WidgetNode.Column(
                 modifier = DslModifier(padding = DslPadding(all = 12), fillMaxWidth = true, cornerRadius = 16),
                 horizontalAlignment = "center",
                 children = listOf(
-                    WidgetNode.Text(text = "{{time}}", fontSize = 28, fontWeight = "bold", color = "#FFFFFF", textAlign = "center"),
+                    WidgetNode.Text(text = "{{time}}", fontSize = 28, fontWeight = "bold", color = "#101828", textAlign = "center"),
                     WidgetNode.Spacer(height = 4),
-                    WidgetNode.Text(text = "{{date}}", fontSize = 12, color = "#BB86FC", textAlign = "center")
+                    WidgetNode.Text(text = "{{date}}", fontSize = 12, color = "#0A67F5", textAlign = "center")
                 )
             )
         )
 
         val battery1x1 = WidgetDefinition(
             version = 1,
-            background = DslBackground.Gradient(listOf("#FF0D47A1", "#FF1976D2"), "vertical"),
+            background = DslBackground.Solid("#FFFFFFFF"),
             updateIntervalMinutes = 15,
             root = WidgetNode.Column(
                 modifier = DslModifier(padding = DslPadding(all = 8), fillMaxWidth = true, cornerRadius = 16),
                 horizontalAlignment = "center",
                 verticalArrangement = "center",
                 children = listOf(
-                    WidgetNode.Text(text = "BATTERY", fontSize = 10, fontWeight = "bold", color = "#BBDEFB"),
+                    WidgetNode.Text(text = "BATTERY", fontSize = 10, fontWeight = "bold", color = "#24364D"),
                     WidgetNode.Spacer(height = 4),
-                    WidgetNode.Text(text = "{{battery}}", fontSize = 22, fontWeight = "bold", color = "#FFFFFF", textAlign = "center")
+                    WidgetNode.Text(text = "{{battery}}", fontSize = 22, fontWeight = "bold", color = "#0A67F5", textAlign = "center")
                 )
             )
         )
 
         val quickLaunch4x1 = WidgetDefinition(
             version = 1,
-            background = DslBackground.Solid("#FF2C2C2C"),
+            background = DslBackground.Solid("#FFFFFFFF"),
             root = WidgetNode.Row(
                 modifier = DslModifier(padding = DslPadding(all = 8), fillMaxWidth = true, cornerRadius = 16),
                 horizontalArrangement = "center",
                 children = listOf(
-                    WidgetNode.Button(text = "Settings", action = DslAction.LaunchApp("com.android.settings"), backgroundColor = "#FF424242", textColor = "#FFFFFF"),
+                    WidgetNode.Button(text = "Settings", action = DslAction.LaunchApp("com.android.settings"), backgroundColor = "#FFEAF2FF", textColor = "#0A67F5"),
                     WidgetNode.Spacer(width = 8),
-                    WidgetNode.Button(text = "Camera", action = DslAction.LaunchApp("com.android.camera"), backgroundColor = "#FF424242", textColor = "#FFFFFF"),
+                    WidgetNode.Button(text = "Camera", action = DslAction.LaunchApp("com.android.camera"), backgroundColor = "#FFEAF2FF", textColor = "#0A67F5"),
                     WidgetNode.Spacer(width = 8),
-                    WidgetNode.Button(text = "Refresh", action = DslAction.Refresh, backgroundColor = "#FF6200EE", textColor = "#FFFFFF")
+                    WidgetNode.Button(text = "Refresh", action = DslAction.Refresh, backgroundColor = "#FFEAF2FF", textColor = "#0A67F5")
                 )
             )
         )
 
         val quote4x2 = WidgetDefinition(
             version = 1,
-            background = DslBackground.Gradient(listOf("#FF283048", "#FF859398"), "vertical"),
+            background = DslBackground.Solid("#FFFFFFFF"),
             root = WidgetNode.Column(
                 modifier = DslModifier(padding = DslPadding(all = 16), fillMaxWidth = true, cornerRadius = 16),
                 children = listOf(
-                    WidgetNode.Text(text = "Daily Inspiration", fontSize = 12, fontWeight = "bold", color = "#FFD700"),
+                    WidgetNode.Text(text = "Daily Inspiration", fontSize = 12, fontWeight = "bold", color = "#0A67F5"),
                     WidgetNode.Spacer(height = 8),
-                    WidgetNode.Text(text = "\"The secret of getting ahead is getting started.\"", fontSize = 16, color = "#FFFFFF", maxLines = 3),
+                    WidgetNode.Text(text = "\"The secret of getting ahead is getting started.\"", fontSize = 16, color = "#101828", maxLines = 3),
                     WidgetNode.Spacer(height = 8),
-                    WidgetNode.Text(text = "- Mark Twain", fontSize = 12, color = "#CCCCCC", textAlign = "end")
+                    WidgetNode.Text(text = "- Mark Twain", fontSize = 12, color = "#24364D", textAlign = "end")
                 )
             )
         )
 
         val systemInfo2x2 = WidgetDefinition(
             version = 1,
-            background = DslBackground.Solid("#FF121212"),
+            background = DslBackground.Solid("#FFFFFFFF"),
             updateIntervalMinutes = 15,
             root = WidgetNode.Column(
                 modifier = DslModifier(padding = DslPadding(all = 12), fillMaxWidth = true, cornerRadius = 16),
                 children = listOf(
-                    WidgetNode.Text(text = "{{time}}", fontSize = 24, fontWeight = "bold", color = "#00E676"),
-                    WidgetNode.Text(text = "{{date}}", fontSize = 12, color = "#B0BEC5"),
-                    WidgetNode.Divider(color = "#37474F", thickness = 1, modifier = DslModifier(padding = DslPadding(top = 8, bottom = 8))),
-                    WidgetNode.Text(text = "Battery: {{battery}}", fontSize = 14, color = "#FFFFFF")
+                    WidgetNode.Text(text = "{{time}}", fontSize = 24, fontWeight = "bold", color = "#101828"),
+                    WidgetNode.Text(text = "{{date}}", fontSize = 12, color = "#24364D"),
+                    WidgetNode.Divider(color = "#FFD8E6F8", thickness = 1, modifier = DslModifier(padding = DslPadding(top = 8, bottom = 8))),
+                    WidgetNode.Text(text = "Battery: {{battery}}", fontSize = 14, color = "#0A67F5")
                 )
             )
         )

@@ -2,11 +2,10 @@ package com.customwidgets.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -23,15 +22,14 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.customwidgets.app.ui.glass.GlassNavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,6 +44,8 @@ import androidx.navigation.navArgument
 import com.customwidgets.app.data.repository.WidgetRepository
 import com.customwidgets.app.ui.create.CreateWidgetScreen
 import com.customwidgets.app.ui.create.CreateWidgetViewModel
+import com.customwidgets.app.ui.glass.GlassBottomBar
+import com.customwidgets.app.ui.glass.glassSourceLayer
 import com.customwidgets.app.ui.gallery.WidgetDetailScreen
 import com.customwidgets.app.ui.gallery.WidgetGalleryScreen
 import com.customwidgets.app.ui.gallery.WidgetGalleryViewModel
@@ -84,81 +84,33 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.light(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        )
         setContent {
             CustomWidgetsTheme {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    bottomBar = {
-                        val isBottomBarVisible = currentRoute in listOf("gallery", "create", "mcp", "settings")
-                        if (isBottomBarVisible) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth()
-                                    .navigationBarsPadding()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                GlassNavigationBar(
-                                    modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                ) {
-                                    NAV_ITEMS.forEach { item ->
-                                        val isSelected = currentRoute == item.route
-                                        NavigationBarItem(
-                                            selected = isSelected,
-                                            onClick = {
-                                                if (currentRoute != item.route) {
-                                                    navController.navigate(item.route) {
-                                                        popUpTo(navController.graph.findStartDestination().id) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
-                                                }
-                                            },
-                                            icon = {
-                                                Icon(
-                                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                                    contentDescription = item.title
-                                                )
-                                            },
-                                            label = {
-                                                Text(
-                                                    text = item.title,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                                )
-                                            },
-                                            colors = NavigationBarItemDefaults.colors(
-                                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                selectedTextColor = MaterialTheme.colorScheme.onSurface
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ) { innerPadding ->
+                Box(Modifier.fillMaxSize()) {
                     NavHost(
                         navController = navController,
                         startDestination = "gallery",
-                        modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
+                        modifier = Modifier.fillMaxSize().glassSourceLayer()
                     ) {
                         composable("gallery") {
                             val galleryViewModel: WidgetGalleryViewModel = hiltViewModel()
                             WidgetGalleryScreen(
                                 viewModel = galleryViewModel,
                                 onCreateWidgetClicked = { navController.navigate("create") },
-                                onMcpClicked = { navController.navigate("mcp") },
-                                onSettingsClicked = { navController.navigate("settings") },
                                 onWidgetClicked = { widgetId -> navController.navigate("detail/$widgetId") }
                             )
                         }
@@ -200,6 +152,62 @@ class MainActivity : ComponentActivity() {
                                 viewModel = settingsViewModel,
                                 onNavigateBack = { navController.popBackStack() }
                             )
+                        }
+                    }
+
+                    if (currentRoute in listOf("gallery", "create", "mcp", "settings")) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .navigationBarsPadding()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .widthIn(max = 560.dp)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            GlassBottomBar(
+                                selectedTabIndex = NAV_ITEMS.indexOfFirst { it.route == currentRoute }
+                                    .coerceAtLeast(0),
+                                tabsCount = NAV_ITEMS.size,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                NAV_ITEMS.forEach { item ->
+                                    val isSelected = currentRoute == item.route
+                                    NavigationBarItem(
+                                        selected = isSelected,
+                                        onClick = {
+                                            if (currentRoute != item.route) {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        },
+                                        icon = {
+                                            Icon(
+                                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                                contentDescription = item.title
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = item.title,
+                                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                            )
+                                        },
+                                        colors = NavigationBarItemDefaults.colors(
+                                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            indicatorColor = Color.Transparent
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
                 }

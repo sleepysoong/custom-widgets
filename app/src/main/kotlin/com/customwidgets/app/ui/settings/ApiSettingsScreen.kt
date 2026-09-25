@@ -83,7 +83,8 @@ fun ApiSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp, bottom = 104.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             // Info Card
@@ -96,7 +97,7 @@ fun ApiSettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "🤖 OpenAI 전용 위젯 생성 엔진",
+                        text = "OpenAI 전용 위젯 생성 엔진",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )

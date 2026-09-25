@@ -160,8 +160,8 @@ object DslRenderer {
             }
             is WidgetNode.Divider -> {
                 val dividerColor = node.color?.let {
-                    Color(GradientRenderer.parseColor(it, android.graphics.Color.DKGRAY))
-                } ?: Color.Gray
+                    Color(GradientRenderer.parseColor(it, android.graphics.Color.WHITE))
+                } ?: Color(0xFFD8E6F8)
                 val thickness = (node.thickness ?: 1).dp
 
                 Box(

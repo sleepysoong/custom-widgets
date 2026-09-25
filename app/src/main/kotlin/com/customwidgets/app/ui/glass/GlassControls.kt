@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
@@ -217,15 +216,7 @@ fun GlassSlider(
                     Modifier.align(Alignment.TopCenter)
                         .padding(top = 5.dp)
                         .size(width = 13.dp, height = 3.dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    scheme.onPrimaryContainer.copy(alpha = .34f),
-                                    scheme.onPrimaryContainer.copy(alpha = .08f)
-                                )
-                            ),
-                            RoundedCornerShape(50)
-                        )
+                        .background(Color.White.copy(alpha = .82f), RoundedCornerShape(50))
                 )
             }
         },
@@ -240,8 +231,8 @@ fun GlassSlider(
                     outlineColor = scheme.outlineVariant.copy(alpha = .72f)
                 ),
                 colors = SliderDefaults.colors(
-                    activeTrackColor = scheme.primary.copy(alpha = .48f),
-                    inactiveTrackColor = scheme.surfaceContainerHighest.copy(alpha = .28f)
+                    activeTrackColor = scheme.primary,
+                    inactiveTrackColor = scheme.surfaceContainerHighest.copy(alpha = .78f)
                 )
             )
         }

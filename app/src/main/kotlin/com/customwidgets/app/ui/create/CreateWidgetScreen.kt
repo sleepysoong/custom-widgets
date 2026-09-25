@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -125,7 +126,8 @@ fun CreateWidgetScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp, bottom = 96.dp)
                 ) {
                     when (uiState.currentStep) {
                         0 -> SizeSelectionStep(
@@ -180,7 +182,8 @@ private fun FoldableDualPaneWizard(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp, bottom = 96.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Left Pane: Controls & Description
@@ -675,7 +678,15 @@ private fun SaveConfirmationStep(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "🎉", fontSize = 48.sp)
+                GlassSurface(
+                    modifier = Modifier.size(72.dp),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "위젯이 저장되었습니다!",

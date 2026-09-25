@@ -4,12 +4,15 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -23,7 +26,6 @@ import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.CircularProgressIndicator
 import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import com.customwidgets.app.ui.glass.GlassExtendedFab
 import androidx.compose.material3.Icon
 import com.customwidgets.app.ui.glass.GlassIconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,18 +77,14 @@ fun McpServerScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    GlassIconButton(onClick = { viewModel.toggleAddDialog(true) }) {
+                        Icon(Icons.Default.Add, contentDescription = "MCP 서버 추가")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
-            )
-        },
-        floatingActionButton = {
-            GlassExtendedFab(
-                onClick = { viewModel.toggleAddDialog(true) },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("서버 추가") },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     ) { padding ->
@@ -102,6 +100,7 @@ fun McpServerScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
+                    contentPadding = PaddingValues(bottom = 104.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
@@ -112,7 +111,7 @@ fun McpServerScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "🌐 Model Context Protocol (MCP)",
+                                    text = "Model Context Protocol (MCP)",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -279,7 +278,7 @@ private fun McpServerCard(
                         ) {
                             Column(modifier = Modifier.padding(8.dp)) {
                                 Text(
-                                    text = "⚡ ${tool.name}",
+                                    text = tool.name,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
@@ -308,7 +307,15 @@ private fun EmptyMcpState(onAddClicked: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "🔌", fontSize = 56.sp)
+        GlassSurface(
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "등록된 MCP 서버가 없습니다",
@@ -319,7 +326,7 @@ private fun EmptyMcpState(onAddClicked: () -> Unit) {
         Text(
             text = "MCP(Model Context Protocol) 서버를 추가하면\n날씨, 금융, 암호화폐 등의 라이브 데이터를 위젯에 실시간 바인딩할 수 있습니다.",
             fontSize = 13.sp,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))

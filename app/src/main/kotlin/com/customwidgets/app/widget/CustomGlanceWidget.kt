@@ -75,7 +75,7 @@ private fun NotConfiguredPlaceholder() {
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(Color(0xFF2C2C2C))
+            .background(Color.White)
             .cornerRadius(16.dp)
             .padding(16.dp)
             .clickable(actionStartActivity<MainActivity>()),
@@ -87,7 +87,7 @@ private fun NotConfiguredPlaceholder() {
             Text(
                 text = "Widget Not Configured",
                 style = TextStyle(
-                    color = ColorProvider(Color.White),
+                    color = ColorProvider(Color(0xFF101828)),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -97,7 +97,7 @@ private fun NotConfiguredPlaceholder() {
             Text(
                 text = "Tap to setup widget",
                 style = TextStyle(
-                    color = ColorProvider(Color(0xFFBB86FC)),
+                    color = ColorProvider(Color(0xFF0A67F5)),
                     fontSize = 12.sp,
                     textAlign = TextAlign.Center
                 )

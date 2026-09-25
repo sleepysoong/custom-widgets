@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -11,19 +12,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Settings
 import com.customwidgets.app.ui.glass.GlassDialog
 import androidx.compose.material3.CardDefaults
 import com.customwidgets.app.ui.glass.GlassCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import com.customwidgets.app.ui.glass.GlassExtendedFab
 import com.customwidgets.app.ui.glass.GlassButton
 import androidx.compose.material3.Icon
 import com.customwidgets.app.ui.glass.GlassIconButton
@@ -43,7 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,8 +58,6 @@ import com.customwidgets.app.util.FoldableUtils
 fun WidgetGalleryScreen(
     viewModel: WidgetGalleryViewModel,
     onCreateWidgetClicked: () -> Unit,
-    onMcpClicked: () -> Unit,
-    onSettingsClicked: () -> Unit,
     onWidgetClicked: (Long) -> Unit
 ) {
     val widgets by viewModel.widgets.collectAsState()
@@ -73,31 +70,13 @@ fun WidgetGalleryScreen(
             GlassMediumTopAppBar(
                 title = {
                     Text(
-                        text = "커스텀 위젯",
+                        text = "내 위젯",
                         fontWeight = FontWeight.Bold
                     )
-                },
-                actions = {
-                    GlassIconButton(onClick = onMcpClicked) {
-                        Icon(Icons.Default.Build, contentDescription = "MCP Servers")
-                    }
-                    GlassIconButton(onClick = onSettingsClicked) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
-            )
-        },
-        floatingActionButton = {
-            GlassExtendedFab(
-                onClick = onCreateWidgetClicked,
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("위젯 만들기", fontWeight = FontWeight.Bold) },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                shape = MaterialTheme.shapes.large
             )
         }
     ) { padding ->
@@ -113,9 +92,9 @@ fun WidgetGalleryScreen(
                     columns = GridCells.Fixed(gridColumns),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 112.dp),
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
                 ) {
                     items(widgets, key = { it.id }) { widget ->
                         ExpressiveWidgetCard(
@@ -197,7 +176,7 @@ private fun ExpressiveWidgetCard(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("미리보기 오류", color = Color.Gray, fontSize = 11.sp)
+                        Text("미리보기 오류", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                     }
                 }
             }
@@ -256,7 +235,19 @@ private fun EmptyExpressiveState(onCreateClicked: () -> Unit) {
                 modifier = Modifier.padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "🎨", fontSize = 56.sp)
+        GlassSurface(
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "저장된 위젯이 없습니다",
