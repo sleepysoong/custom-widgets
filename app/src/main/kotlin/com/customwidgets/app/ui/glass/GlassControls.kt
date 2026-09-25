@@ -2,9 +2,10 @@ package com.customwidgets.app.ui.glass
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,6 +20,15 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.shadow
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.shapes.Capsule
 
 /** Material owns gestures, focus and semantics; the modifier owns only the material. */
 @Composable
@@ -169,10 +179,10 @@ fun GlassSwitch(
     val scheme = MaterialTheme.colorScheme
     Switch(
         checked = checked, onCheckedChange = onCheckedChange, enabled = enabled,
-        modifier = modifier,
+        modifier = modifier.glassMaterial(Capsule(), scheme.surfaceContainerHigh, compact = true, enabled = enabled),
         colors = SwitchDefaults.colors(
-            checkedTrackColor = scheme.primaryContainer.copy(alpha = .65f),
-            uncheckedTrackColor = scheme.surfaceContainerHigh.copy(alpha = .65f),
+            checkedTrackColor = scheme.primaryContainer.copy(alpha = .35f),
+            uncheckedTrackColor = Color.White.copy(alpha = .18f),
             checkedThumbColor = Color.Transparent, uncheckedThumbColor = Color.Transparent,
             disabledCheckedThumbColor = Color.Transparent, disabledUncheckedThumbColor = Color.Transparent
         ),
@@ -198,41 +208,51 @@ fun GlassSlider(
 ) {
     val interactions = remember { MutableInteractionSource() }
     val scheme = MaterialTheme.colorScheme
+    val baseBackdrop = LocalGlassBackdrop.current
+    val trackBackdrop = rememberLayerBackdrop()
+    val pressed by interactions.collectIsPressedAsState()
+    val mode = LocalGlassMode.current
     Slider(
         value = value, onValueChange = onValueChange, modifier = modifier.heightIn(min = 56.dp),
         enabled = enabled, valueRange = valueRange, steps = steps,
         onValueChangeFinished = onValueChangeFinished, interactionSource = interactions,
         thumb = {
-            Box(
-                Modifier.size(32.dp).glassMaterial(
-                    CircleShape,
-                    scheme.primaryContainer,
-                    compact = false,
-                    enabled = enabled,
-                    outlineColor = scheme.onPrimaryContainer.copy(alpha = .48f)
+            val thumbMaterial = if (baseBackdrop == null || mode == GlassMode.Off) {
+                Modifier.background(scheme.primaryContainer, Capsule())
+            } else {
+                Modifier.drawBackdrop(
+                    backdrop = rememberCombinedBackdrop(baseBackdrop, trackBackdrop),
+                    shape = { Capsule() },
+                    effects = {
+                        blur(if (pressed) 2.dp.toPx() else 5.dp.toPx())
+                        if (mode == GlassMode.Full) lens(10.dp.toPx(), 16.dp.toPx(), chromaticAberration = true)
+                    },
+                    highlight = { Highlight.Default.copy(alpha = .9f) },
+                    onDrawSurface = { drawRect(Color.White.copy(alpha = if (pressed) .30f else .48f)) }
                 )
+            }
+            Box(
+                Modifier.size(width = 44.dp, height = 34.dp)
+                    .shadow(5.dp, Capsule())
+                    .then(thumbMaterial)
+                    .border(1.dp, scheme.primary.copy(alpha = .50f), Capsule())
             ) {
                 Box(
                     Modifier.align(Alignment.TopCenter)
-                        .padding(top = 5.dp)
-                        .size(width = 13.dp, height = 3.dp)
-                        .background(Color.White.copy(alpha = .82f), RoundedCornerShape(50))
+                        .padding(top = 5.dp).size(width = 20.dp, height = 3.dp)
+                        .background(Color.White.copy(alpha = .95f), Capsule())
                 )
             }
         },
         track = { state ->
             SliderDefaults.Track(
                 sliderState = state, enabled = enabled,
-                modifier = Modifier.height(18.dp).glassMaterial(
-                    RoundedCornerShape(50),
-                    scheme.surfaceContainerHigh,
-                    compact = false,
-                    enabled = enabled,
-                    outlineColor = scheme.outlineVariant.copy(alpha = .72f)
-                ),
+                modifier = Modifier.height(12.dp)
+                    .layerBackdrop(trackBackdrop)
+                    .glassMaterial(Capsule(), Color.White, compact = false, enabled = enabled),
                 colors = SliderDefaults.colors(
                     activeTrackColor = scheme.primary,
-                    inactiveTrackColor = scheme.surfaceContainerHighest.copy(alpha = .78f)
+                    inactiveTrackColor = scheme.primaryContainer
                 )
             )
         }

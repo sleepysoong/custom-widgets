@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
@@ -27,10 +31,12 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -102,6 +108,13 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+                val navInteractions = remember { NAV_ITEMS.map { MutableInteractionSource() } }
+                val selectedIndex = NAV_ITEMS.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
+                var pressedNavIndex = -1
+                navInteractions.forEachIndexed { index, source ->
+                    val pressed by source.collectIsPressedAsState()
+                    if (pressed) pressedNavIndex = index
+                }
 
                 // Only the sibling bottom bar consumes this recording. Page controls use
                 // GlassHost's separate background, avoiding a GraphicsLayer dependency cycle.
@@ -181,16 +194,27 @@ class MainActivity : ComponentActivity() {
                             contentAlignment = Alignment.Center
                         ) {
                             GlassBottomBar(
-                                selectedTabIndex = NAV_ITEMS.indexOfFirst { it.route == currentRoute }
-                                    .coerceAtLeast(0),
+                                selectedTabIndex = selectedIndex,
                                 tabsCount = NAV_ITEMS.size,
                                 backdrop = navigationBackdrop,
+                                pressedTabIndex = pressedNavIndex,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                NAV_ITEMS.forEach { item ->
+                                NAV_ITEMS.forEachIndexed { index, item ->
                                     val isSelected = currentRoute == item.route
+                                    val isPressed by navInteractions[index].collectIsPressedAsState()
+                                    val tabScale by animateFloatAsState(
+                                        targetValue = if (isPressed) 0.92f else 1f,
+                                        animationSpec = spring(dampingRatio = 0.55f, stiffness = 380f),
+                                        label = "navigation-tab-press"
+                                    )
                                     NavigationBarItem(
                                         selected = isSelected,
+                                        interactionSource = navInteractions[index],
+                                        modifier = Modifier.graphicsLayer {
+                                            scaleX = tabScale
+                                            scaleY = tabScale
+                                        },
                                         onClick = {
                                             if (currentRoute != item.route) {
                                                 navController.navigate(item.route) {

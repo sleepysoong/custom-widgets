@@ -99,6 +99,7 @@ fun GlassBottomBar(
     selectedTabIndex: Int,
     tabsCount: Int,
     backdrop: Backdrop?,
+    pressedTabIndex: Int,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
@@ -108,9 +109,15 @@ fun GlassBottomBar(
     val accent = MaterialTheme.colorScheme.primary
     val capsule = Capsule()
     val selectedPosition = animateFloatAsState(
-        targetValue = selectedTabIndex.coerceIn(0, tabsCount - 1).toFloat(),
+        targetValue = (if (pressedTabIndex >= 0) pressedTabIndex else selectedTabIndex)
+            .coerceIn(0, tabsCount - 1).toFloat(),
         animationSpec = spring(dampingRatio = 0.78f, stiffness = 520f),
         label = "glass-bottom-bar-selection"
+    ).value
+    val pressProgress = animateFloatAsState(
+        targetValue = if (pressedTabIndex >= 0) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = 380f),
+        label = "glass-bottom-bar-press"
     ).value
     val barMaterial = if (backdrop == null) {
         Modifier.background(Color.White.copy(alpha = 0.96f), capsule)
@@ -151,12 +158,16 @@ fun GlassBottomBar(
                 shape = { Capsule() },
                 effects = {
                     if (hasFullGlassEffects) {
-                        lens(12.dp.toPx(), 20.dp.toPx())
+                        lens((12.dp + 4.dp * pressProgress).toPx(), (20.dp + 8.dp * pressProgress).toPx())
                     } else {
                         blur(4.dp.toPx())
                     }
                 },
-                highlight = { Highlight.Default.copy(alpha = 0.55f) },
+                highlight = { Highlight.Default.copy(alpha = 0.55f + 0.4f * pressProgress) },
+                layerBlock = {
+                    scaleX = 1f + 0.08f * pressProgress
+                    scaleY = 1f + 0.08f * pressProgress
+                },
                 onDrawSurface = { drawRect(accent.copy(alpha = 0.13f)) }
             )
         }

@@ -947,3 +947,25 @@ git -C /root/auto-band-selector show 6aa9ae9c418d91e0c5979dc98faa196842b26dec
 의존성은 `A(흰 배경) → B(화면과 A를 읽는 컨트롤) → 하단 바`다.
 `layerBackdrop(X)`가 기록하는 하위 트리에서 X를 직접 또는 간접적으로 읽는 코드를
 추가하지 않는다. 이 규칙은 Kotlin 컴파일 성공만으로 확인할 수 없다.
+
+## 부록 D. 2026-09-25 전체 UI 재점검
+
+사용자 보고에 따라 `ui`와 `MainActivity`의 Compose 컨트롤 호출을 다시 검색했다.
+앱 화면의 동작 가능한 버튼, 아이콘 버튼, 모델 선택 칩, 텍스트 필드, 스위치,
+카드, 다이얼로그, 크기 선택 카드, temperature 슬라이더는 `Glass*` 공통
+컴포넌트를 통한다. 하단 탭은 `GlassBottomBar` 안의 Material `NavigationBarItem`으로
+클릭 의미와 접근성을 유지한다. `ComposeWidgetPreview`와 Glance 위젯은 생성된
+위젯의 DSL 색상과 배치를 미리 보는 콘텐츠라 앱 크롬 재질을 덮지 않는다.
+
+공통 재질의 표면 틴트를 낮추고 `Highlight.Default`와 전체 shape 굴절을 적용했다.
+이 변경은 모델 선택, 연결 테스트, 저장, MCP 작업 버튼 등에 함께 적용된다.
+슬라이더는 공식 [Glass Slider](https://kyant.gitbook.io/backdrop/tutorials/glass-slider)
+방식으로 트랙을 별도 `LayerBackdrop`에 기록하고, 손잡이가 기존 흰 배경과
+트랙을 `rememberCombinedBackdrop`으로 합쳐 읽는다. 트랙이 손잡이를 기록하지
+않으므로 자기 참조가 생기지 않는다. 하단 탭은 공식 [Interactive Glass Bottom Bar](https://kyant.gitbook.io/backdrop/tutorials/interactive-glass-bottom-bar)의
+`layerBlock` 방식을 참고해 누르는 동안 캡슐을 확대하고 굴절과 하이라이트를
+키운다. 각 탭의 글자와 아이콘도 별도로 축소 반응한다.
+
+시각 품질은 실제 기기에서 모델 선택, 연결 테스트 버튼, 슬라이더 드래그,
+하단 탭 터치, 다이얼로그를 순서대로 확인해야 한다. 컴파일만으로 그래픽
+드라이버의 순환 렌더링 오류나 디자인의 가독성을 확인할 수 없다.

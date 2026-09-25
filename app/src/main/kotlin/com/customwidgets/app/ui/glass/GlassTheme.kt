@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +26,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
 
 enum class GlassMode { Full, BlurOnly, Off }
 
@@ -91,8 +91,8 @@ internal fun Modifier.glassMaterial(
     val mode = LocalGlassMode.current
     val scheme = MaterialTheme.colorScheme
     val surface = if (enabled) tint else scheme.surfaceContainerHighest
-    val opacity = if (compact) .82f else .70f
-    val outline = outlineColor ?: scheme.outlineVariant.copy(alpha = if (enabled) .65f else .35f)
+    val opacity = if (compact) .38f else .27f
+    val outline = outlineColor ?: scheme.outline.copy(alpha = if (enabled) .58f else .32f)
     val material = if (backdrop == null || mode == GlassMode.Off) {
         Modifier.background(surface.copy(alpha = 1f), shape)
     } else {
@@ -102,17 +102,12 @@ internal fun Modifier.glassMaterial(
             effects = {
                 vibrancy()
                 colorControls(saturation = 1.04f)
-                blur((if (compact || mode == GlassMode.BlurOnly) 8.dp else 14.dp).toPx())
-                // Only supported corner shapes enter lens; icons and text remain foreground.
-                if (mode == GlassMode.Full && shape is CornerBasedShape) {
-                    val radius = minOf(
-                        shape.topStart.toPx(size, this), shape.topEnd.toPx(size, this),
-                        shape.bottomStart.toPx(size, this), shape.bottomEnd.toPx(size, this),
-                        size.minDimension / 2f
-                    )
-                    lens(minOf(14.dp.toPx(), radius), minOf(22.dp.toPx(), size.minDimension))
+                blur((if (compact || mode == GlassMode.BlurOnly) 6.dp else 10.dp).toPx())
+                if (mode == GlassMode.Full) {
+                    lens(minOf(12.dp.toPx(), size.minDimension / 4f), minOf(18.dp.toPx(), size.minDimension / 2f))
                 }
             },
+            highlight = { Highlight.Default.copy(alpha = if (enabled) .75f else .35f) },
             shadow = null,
             onDrawSurface = { drawRect(surface.copy(alpha = opacity)) }
         )
