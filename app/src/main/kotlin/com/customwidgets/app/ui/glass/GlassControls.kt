@@ -3,6 +3,8 @@ package com.customwidgets.app.ui.glass
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,6 +13,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
@@ -196,21 +200,48 @@ fun GlassSlider(
     val interactions = remember { MutableInteractionSource() }
     val scheme = MaterialTheme.colorScheme
     Slider(
-        value = value, onValueChange = onValueChange, modifier = modifier.heightIn(min = 48.dp),
+        value = value, onValueChange = onValueChange, modifier = modifier.heightIn(min = 56.dp),
         enabled = enabled, valueRange = valueRange, steps = steps,
         onValueChangeFinished = onValueChangeFinished, interactionSource = interactions,
         thumb = {
-            Box(Modifier.size(28.dp).glassMaterial(
-                RoundedCornerShape(50), scheme.primaryContainer, compact = true, enabled = enabled
-            ))
+            Box(
+                Modifier.size(32.dp).glassMaterial(
+                    CircleShape,
+                    scheme.primaryContainer,
+                    compact = false,
+                    enabled = enabled,
+                    outlineColor = scheme.onPrimaryContainer.copy(alpha = .48f)
+                )
+            ) {
+                Box(
+                    Modifier.align(Alignment.TopCenter)
+                        .padding(top = 5.dp)
+                        .size(width = 13.dp, height = 3.dp)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    scheme.onPrimaryContainer.copy(alpha = .34f),
+                                    scheme.onPrimaryContainer.copy(alpha = .08f)
+                                )
+                            ),
+                            RoundedCornerShape(50)
+                        )
+                )
+            }
         },
         track = { state ->
             SliderDefaults.Track(
                 sliderState = state, enabled = enabled,
-                modifier = Modifier.glassMaterial(RoundedCornerShape(50), compact = true, enabled = enabled),
+                modifier = Modifier.height(18.dp).glassMaterial(
+                    RoundedCornerShape(50),
+                    scheme.surfaceContainerHigh,
+                    compact = false,
+                    enabled = enabled,
+                    outlineColor = scheme.outlineVariant.copy(alpha = .72f)
+                ),
                 colors = SliderDefaults.colors(
-                    activeTrackColor = scheme.primary.copy(alpha = .75f),
-                    inactiveTrackColor = scheme.surfaceContainerHigh.copy(alpha = .3f)
+                    activeTrackColor = scheme.primary.copy(alpha = .48f),
+                    inactiveTrackColor = scheme.surfaceContainerHighest.copy(alpha = .28f)
                 )
             )
         }

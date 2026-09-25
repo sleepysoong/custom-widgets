@@ -1,9 +1,6 @@
 package com.customwidgets.app.ui.glass
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Build
-import androidx.core.content.edit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -13,14 +10,15 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.Backdrop
@@ -31,55 +29,22 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.colorControls
 import com.kyant.backdrop.effects.lens
 
-/** Persisted names are deliberately independent of the API-specific effective mode. */
-enum class GlassPreference { Auto, Reduced, Off }
 enum class GlassMode { Full, BlurOnly, Off }
 
-fun resolveGlassMode(sdk: Int, preference: GlassPreference): GlassMode = when {
-    preference == GlassPreference.Off || sdk < 31 -> GlassMode.Off
-    preference == GlassPreference.Reduced || sdk < 33 -> GlassMode.BlurOnly
+/** Always choose the strongest effect supported by the running Android version. */
+fun resolveGlassMode(sdk: Int): GlassMode = when {
+    sdk < 31 -> GlassMode.Off
+    sdk < 33 -> GlassMode.BlurOnly
     else -> GlassMode.Full
 }
 
-private const val MODE_KEY = "visual_effects"
-// Emergency release override. Unlike a UI setting, this also works before the first frame.
-private const val FORCE_EFFECTS_OFF = false
-
-@Stable
-class GlassSettings internal constructor(private val preferences: SharedPreferences) {
-    var preference by mutableStateOf(read())
-        private set
-    private fun read() = runCatching {
-        GlassPreference.valueOf(preferences.getString(MODE_KEY, "Auto") ?: "Auto")
-    }.getOrDefault(GlassPreference.Auto)
-    internal fun refresh() { preference = read() }
-    fun select(value: GlassPreference) {
-        preference = value
-        preferences.edit { putString(MODE_KEY, value.name) }
-    }
-}
-
-val LocalGlassSettings = staticCompositionLocalOf<GlassSettings?> { null }
 val LocalGlassMode = staticCompositionLocalOf { GlassMode.Off }
 internal val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 @Composable
 fun GlassTheme(content: @Composable () -> Unit) {
-    val context = LocalContext.current.applicationContext
-    val preferences = remember(context) { context.getSharedPreferences("glass_appearance", Context.MODE_PRIVATE) }
-    val settings = remember(preferences) { GlassSettings(preferences) }
-    DisposableEffect(preferences, settings) {
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == MODE_KEY) settings.refresh()
-        }
-        preferences.registerOnSharedPreferenceChangeListener(listener)
-        onDispose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
-    }
-    val mode = if (FORCE_EFFECTS_OFF || LocalInspectionMode.current) GlassMode.Off
-        else resolveGlassMode(Build.VERSION.SDK_INT, settings.preference)
-    CompositionLocalProvider(LocalGlassSettings provides settings, LocalGlassMode provides mode) {
-        content()
-    }
+    val mode = if (LocalInspectionMode.current) GlassMode.Off else resolveGlassMode(Build.VERSION.SDK_INT)
+    CompositionLocalProvider(LocalGlassMode provides mode, content = content)
 }
 
 /** Source and consumers are siblings. Never put layerBackdrop on the content container. */
@@ -87,6 +52,7 @@ fun GlassTheme(content: @Composable () -> Unit) {
 fun GlassHost(
     modifier: Modifier = Modifier,
     fillWindow: Boolean = true,
+    backgroundShape: Shape? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val mode = LocalGlassMode.current
@@ -98,6 +64,7 @@ fun GlassHost(
     Box(if (fillWindow) modifier.fillMaxSize() else modifier) {
         Box(
             Modifier.matchParentSize()
+                .then(backgroundShape?.let { Modifier.clip(it) } ?: Modifier)
                 .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
                 .background(brush)
         )

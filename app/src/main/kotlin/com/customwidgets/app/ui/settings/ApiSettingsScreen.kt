@@ -86,9 +86,6 @@ fun ApiSettingsScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            com.customwidgets.app.ui.glass.GlassAppearanceSettings()
-            Spacer(Modifier.height(16.dp))
-
             // Info Card
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),

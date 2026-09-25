@@ -27,7 +27,6 @@ class GlassCatalogActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text("Liquid Glass catalog", style = MaterialTheme.typography.headlineMedium)
-                    GlassAppearanceSettings()
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         GlassFilterChip(dark, { dark = !dark }, { Text("Dark theme") })
                         GlassSecondaryButton({ recreate() }) { Text("Recreate") }

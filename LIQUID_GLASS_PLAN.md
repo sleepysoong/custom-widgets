@@ -10,12 +10,25 @@
 
 초기 계획에 따라 앱 셸과 화면 컴포넌트 전환, 의존성/도구 체인 정렬이 코드에 반영됐다. 현황·파일 지도는 [implementation.md](docs/liquid-glass/implementation.md), 호환 버전은 [compatibility.md](docs/liquid-glass/compatibility.md), 실제로 끝난 확인과 미실행 항목은 [verification.md](docs/liquid-glass/verification.md)에 기록한다. 아래 체크리스트를 완료로 표시하는 최종 인수 검증은 아직 진행 중이다.
 
+2026-09-25 후속 요청에서 제품 결정을 갱신했다. **사용자가 시각 효과 모드를 고르는 설정을 제공하지 않는다.** 각 기기에서 가능한 가장 높은 효과를 자동 적용한다. 예전 본문의 Auto/Reduced/Off 선택 UI와 저장 동작에 관한 지침은 아래 갱신된 결정으로 대체한다.
+
+### 후속 UI 정리 TODO
+
+- [x] Settings의 시각 효과 선택 UI, SharedPreferences 상태, 번역 리소스를 제거한다.
+- [x] API31–32는 blur, API33 이상은 lens를 포함한 Full 모드로 자동 고정한다.
+- [x] 창의성 슬라이더의 glass thumb와 충분한 높이의 굴절 track을 공통 컴포넌트에서 강화한다.
+- [x] MCP 등록 다이얼로그의 backdrop 소스를 패널 shape 안으로 clip해 네 모서리를 일치시킨다.
+- [x] 하단 NavigationBar를 시스템 하단 inset 위의 둥근 플로팅 glass bar로 바꾼다.
+- [x] debug catalog·계측 테스트 코드·구현 문서에서 삭제된 모드 선택 UI 참조를 정리한다.
+- [x] 테스트 실행 없이 `:app:assembleDebug`로 변경된 앱 소스를 컴파일하고 설치 APK를 생성한다.
+- [ ] 최신 APK를 실제 기기에 설치해 창의성 슬라이더, MCP 등록 모서리, 플로팅 바를 눈으로 확인한다. 이 기기 확인은 사용자가 직접 진행한다.
+
 
 1. **Kyant0 AndroidLiquidGlass의 배포 라이브러리인 Backdrop 2.0.1을 도입한다.** 이 라이브러리는 완성된 버튼 세트를 제공하지 않는다. 배경 캡처·흐림·굴절 기능 위에 이 앱의 공통 UI 컴포넌트를 만든다.
 2. 앱이 소유한 모든 인터랙션 표면을 전환한다. 버튼, 아이콘 버튼, FAB, 선택 칩, 입력창, 스위치, 슬라이더, 탭, 카드, 상·하단 바, 삭제 확인 및 MCP 등록 다이얼로그가 포함된다.
 3. **최우선 선행 작업은 빌드 호환성 확보다.** 배포된 `backdrop-android:2.0.1` AAR는 `minCompileSdk=37`을 요구한다. 현재 앱은 compileSdk 35, Kotlin 2.0.21, 오래된 Compose BOM을 사용한다. 의존성 한 줄만 추가하는 작업으로 취급하면 안 된다.
 4. **배경 캡처 영역 안에 그 배경을 사용하는 유리 컴포넌트를 넣지 않는다.** 참조 앱에서 실제 수정한 RenderThread 순환 문제다. 배경 전용 형제 레이어와 전경 UI를 분리한다.
-5. API 31–32는 blur 중심, API 33 이상은 blur + lens를 사용한다. 효과를 끈 경우에도 동일한 버튼·입력·상태가 불투명 표면으로 동작한다.
+5. API 31–32는 blur 중심, API 33 이상은 blur + lens를 사용한다. 사용자 선택은 없으며 각 Android 버전에서 가능한 가장 강한 지원 효과를 사용한다. minSdk보다 낮은 버전과 Preview에서는 안전한 불투명 fallback을 쓴다.
 6. 앱 내 위젯 미리보기의 **외곽 UI**는 전환한다. 사용자가 만든 DSL의 실제 내용과 홈 화면 Glance 위젯에는 Compose Backdrop을 직접 주입하지 않는다. 두 렌더러의 결과 일치를 보존한다.
 7. 단계별로 도구 체인 → 독립 샘플 → 디자인 시스템 → 화면 → 모달 → 접근성·성능 검증을 진행한다. 전체 화면을 한 번에 교체하지 않는다.
 
@@ -50,6 +63,7 @@
 - 바탕은 밝은 중성색 또는 어두운 중성색, 주요 액션과 선택 상태는 `colorScheme.primary`, 파괴적 액션은 `error` 계열로 표현한다.
 - 배경에 완만한 색 변화가 있어야 굴절이 보인다. 정적인 그라데이션과 소수의 넓은 색 면을 사용한다. 매 프레임 움직이는 배경은 기본값으로 넣지 않는다.
 - 모든 요소가 동일 강도로 굴절될 필요는 없다. 외곽 카드·바·다이얼로그가 재질을 만들고, 작은 내부 액션은 약한 blur 또는 톤·윤곽선으로 동일 언어를 유지한다.
+- 효과 강도는 사용자가 변경할 수 없다. API31–32는 blur, API33 이상은 lens를 포함한 Full 효과를 자동 선택하고 그 외 환경만 안전하게 fallback한다.
 - 텍스트 자체를 흐리거나 굴절시키지 않는다. Backdrop을 그린 다음 텍스트와 아이콘을 선명한 전경으로 그린다.
 
 ### 1.3 Glance 경계
@@ -291,14 +305,14 @@ app/src/debug/kotlin/com/customwidgets/app/qa/GlassCatalogScreen.kt
 
 Manifest에는 debug Activity만 등록한다. 수동 실행은 debug 진입 메뉴 또는 명시적 Intent로 제공한다. release manifest에는 포함하지 않는다.
 
-샘플은 네트워크·Hilt ViewModel·위젯 데이터에 의존하지 않게 만든다. 체크무늬/선형 그라데이션 배경 위에 카드 하나, 버튼 하나, 입력창 하나를 놓는다. Full/BlurOnly/Off, light/dark, 1배/2배 글꼴, dialog 열기, recreate를 확인할 수 있게 한다. 실제 앱의 조용한 배경에 앞서 패턴 배경을 쓰는 이유는 흐림과 굴절의 존재를 눈으로 판별하기 쉽기 때문이다.
+샘플은 네트워크·Hilt ViewModel·위젯 데이터에 의존하지 않게 만든다. 체크무늬/선형 그라데이션 배경 위에 카드 하나, 버튼 하나, 입력창 하나를 놓는다. API31/32 fallback과 API33 이상 Full, light/dark, 1배/2배 글꼴, dialog 열기, recreate를 확인할 수 있게 한다. 실제 앱의 조용한 배경에 앞서 패턴 배경을 쓰는 이유는 흐림과 굴절의 존재를 눈으로 판별하기 쉽기 때문이다.
 
 ### 6.2 제안 파일 구조
 
 ```text
 ui/glass/
   GlassTokens.kt          # Dp·색·상태 토큰
-  GlassPolicy.kt          # API·사용자 설정·저비용 모드
+  GlassPolicy.kt          # Android API capability 기반 최상 효과 정책
   GlassHost.kt            # 배경 소스 수명, CompositionLocal
   GlassSurface.kt         # drawBackdrop와 불투명 fallback 한 곳에서 구현
   GlassButton.kt          # 버튼·아이콘·텍스트 액션·FAB
@@ -337,20 +351,19 @@ lens의 refractionHeight는 실제 최소 corner radius 이하, refractionAmount
 ### 6.4 효과 정책
 
 ```kotlin
-// 구현 예시: GlassPolicy.kt — Android API는 호출부에서 주입하여 단위 검증 가능하게 한다.
+// 구현 예시: GlassTheme.kt — 사용자 선택 없이 Android API의 최대 지원 효과를 사용한다.
 enum class GlassMode { Full, BlurOnly, Off }
 
-fun resolveGlassMode(sdkInt: Int, requested: GlassMode): GlassMode = when {
-    requested == GlassMode.Off -> GlassMode.Off
+fun resolveGlassMode(sdkInt: Int): GlassMode = when {
     sdkInt < 31 -> GlassMode.Off
-    requested == GlassMode.BlurOnly || sdkInt < 33 -> GlassMode.BlurOnly
+    sdkInt < 33 -> GlassMode.BlurOnly
     else -> GlassMode.Full
 }
 ```
 
-앱 minSdk가 31이므로 실제 지원 범위의 최소 모드는 blur다. Off는 미리보기·접근성·저비용·장애 우회를 위해 별도로 둔다. 설정 화면에 “시각 효과: 자동 / 간소화 / 끄기”를 추가한다. 자동은 지원 API에 맞춰 Full 또는 BlurOnly, 간소화는 BlurOnly로 매핑하되 blur 반경·그림자를 줄인다. 설정 저장은 기존 AI 키 저장 책임과 분리한 `GlassPreferences`로 구현하고, Activity마다 동일 값을 관찰한다.
+앱 minSdk는 31이므로 실제 설치 대상에서는 blur 이상의 glass가 항상 켜진다. API31–32는 lens를 사용할 수 없어 BlurOnly이고, API33 이상은 Full이다. Off는 preview 등 Backdrop을 그릴 수 없는 개발 환경과 minSdk 아래 버전의 안전 fallback에만 쓴다. 사용자가 강도를 고르거나 저장하는 설정·SharedPreferences 상태는 만들지 않는다.
 
-시스템의 모션 축소 의도를 읽을 수 있는 선택 Compose API를 확인하여 애니메이션에 반영한다. 확인하지 않은 “Android 전체 투명도 감소 설정” API가 있다고 가정하지 않는다. 사용자 Off 설정은 항상 제공한다.
+모션은 Material 컴포넌트의 기본 동작을 유지한다. 시스템의 접근성 모션 축소 의도를 읽는 API를 실제로 확인하기 전에는 별도 애니메이션 정책을 추가하지 않는다.
 
 ## 7. 단계 2 — 렌더링 구조와 구현 예시
 
@@ -576,7 +589,7 @@ GlassSurface(/* 공통 토큰 */, modifier = modifier.heightIn(min = 48.dp)) {
 
 - 먼저 기본 Material 동작을 유지한 상태에서 유리 외곽/색/윤곽을 연결한다.
 - 다음으로 **선택한 Material3 버전의 실제 슬롯 API**를 확인해 thumb/track을 유리화한다. 슬라이더 카탈로그 코드를 이름만 바꿔 통째로 복사하지 않는다.
-- thumb는 작은 면적이므로 작은 corner에 맞춘 lens 수치 또는 blur-only를 사용한다. 활성 트랙은 primary, 비활성 트랙은 중성 톤으로 남긴다.
+- 창의성 slider는 32dp 원형 glass thumb와 18dp pill glass track을 사용한다. 둘 다 `compact = false`로 Full 모드의 blur/lens를 분명히 보이고, 활성·비활성 진행선만 반투명 색으로 얹는다. API31–32에서는 같은 형상으로 blur가 적용된다.
 - Switch는 내부 전체를 투명하게 해서 on/off 표시가 사라지지 않도록 한다. 엄지 위치 + 아이콘/체크 + 상태 설명을 조합한다.
 - 처음부터 `pointerInput`으로 전체 동작을 다시 만들 경우 키보드, TalkBack, 드래그 취소, RTL, disabled 지원을 모두 구현해야 하므로 이 계획의 기본 경로로 삼지 않는다.
 
@@ -591,7 +604,7 @@ GlassSurface(/* 공통 토큰 */, modifier = modifier.heightIn(min = 48.dp)) {
 | disabled | 불투명에 가까운 중성 톤, 읽을 수 있는 글자 | 액션 실행 안 됨 |
 | loading | label 유지 + indicator | 중복 요청 차단 |
 | error/destructive | error 색 + 문구/아이콘 | 삭제 확인은 기존 흐름대로 |
-| effects Off | solid surface + 같은 형태/위계 | 모든 기능 동일 |
+| API/preview fallback | solid surface + 같은 형태/위계 | 미지원 환경에서 기능 동일 |
 
 ## 9. 단계 4 — 다이얼로그·팝업·시트
 
@@ -686,10 +699,9 @@ Dialog(onDismissRequest, DialogProperties)
 1. 안내 카드·외부 링크·API key 입력·표시 토글을 전환한다.
 2. 모델 chips와 temperature slider, max token 입력을 공통화한다.
 3. 연결 테스트/저장 버튼은 기존 enabled/loading 조건을 그대로 전달한다.
-4. 시각 효과 설정을 별도 섹션으로 추가한다. 값 변경은 AI 연결 테스트를 유발하지 않는다.
-5. API key 텍스트는 backdrop source에 포함시키지 않는다. 문서/스크린샷 예제에는 더미 값만 쓴다.
+4. API key 텍스트는 backdrop source에 포함시키지 않는다. 문서/스크린샷 예제에는 더미 값만 쓴다.
 
-완료: 키 숨김/표시, IME, 모델 선택, slider 양 끝/접근성 증감, 연결 성공·실패, 저장, 앱 재시작 후 시각 설정 유지.
+완료: 키 숨김/표시, IME, 모델 선택, 창의성 slider 양 끝/접근성 증감, 연결 성공·실패, 저장. 시각 효과는 설정이 아니라 Android API 지원 정책에 따라 결정된다.
 
 ### 10.6 MCP
 
@@ -710,7 +722,7 @@ Dialog(onDismissRequest, DialogProperties)
 - 글자 크기 1.0/1.5/2.0, 긴 한국어 라벨, RTL 시 방향 아이콘·슬라이더를 확인한다.
 - TalkBack: 버튼 이름 1회, chip 선택 여부, Switch on/off, Slider 값/증감, dialog 제목·focus 순서, disabled 확인.
 - `contentDescription`은 아이콘 전용 컨트롤에 제공한다. 이미 읽히는 Text에 같은 설명을 중복 추가하지 않는다.
-- effect Off 상태에서도 focus/pressed/selected를 확인할 수 있게 한다.
+- API31–32 BlurOnly fallback에서도 focus/pressed/selected를 확인할 수 있게 한다.
 
 ### 11.2 크기와 좌표
 
@@ -731,7 +743,7 @@ Dialog(onDismissRequest, DialogProperties)
 - 제안 합격 목표: 대표 스크롤의 jank 비율이 기준보다 2%p 이상 악화되지 않음, P95 frame time 10% 이상 회귀 시 원인 분석. 기준이 이미 나쁘면 이 수치만 통과하고 출시하지 않는다.
 - release에 가까운 profileable 빌드로 측정한다. debug 컴파일 오버헤드만으로 최종 성능을 판단하지 않는다.
 
-비용이 높으면 lens/depth/shadow → blur 반경 → 중첩 수 → source 면적 순으로 줄인다. 읽기 쉬운 tint/outline/shape는 남긴다. Off에서는 source 기록도 생략할 수 있도록 host와 surface 정책을 함께 최적화한다.
+비용이 높으면 lens/depth/shadow → blur 반경 → 중첩 수 → source 면적 순으로 줄인다. 읽기 쉬운 tint/outline/shape는 남긴다. API/preview fallback에서는 source 기록을 생략한다.
 
 ## 12. 검증 계획 — 구현 단계에서 수행할 작업
 
@@ -786,7 +798,7 @@ Dialog가 열리면 여러 root가 생길 수 있다. `onRoot()` 하나를 무�
 | 중급 GPU 기기 | 목록 스크롤·여러 유리 카드·발열 후 frame time |
 | light/dark + dynamic color | 밝은/어두운 배경 대비와 primary 가독성 |
 | font scale 1.0/1.5/2.0 + TalkBack | 잘림·focus·상태·액션 |
-| Full/BlurOnly/Off | 기능 동일성 및 Off의 안정적 fallback |
+| API31–32 BlurOnly / API33+ Full | 지원 효과 차이에도 기능·가독성 동일성 유지; 사용자 강도 선택 UI는 없음 |
 
 가용하지 않은 기기는 “미검증”으로 기록한다. 에뮬레이터 성공을 실제 GPU 성공으로 바꾸어 적지 않는다.
 
@@ -797,7 +809,7 @@ Dialog가 열리면 여러 root가 생길 수 있다. `onRoot()` 하나를 무�
 - [ ] 갤러리 빈 목록/많은 카드/삭제 취소·확인.
 - [ ] Create의 모든 단계, 오류·재시도·JSON 편집·저장; compact/dual pane.
 - [ ] 위젯 구성 Activity에서 성공/취소, 홈 위젯 실제 렌더·업데이트.
-- [ ] Settings 키 표시·입력·테스트·저장, 시각 설정 재시작 유지.
+- [ ] Settings 키 표시·입력·테스트·저장; 창의성 slider의 glass 외관과 접근성 조작.
 - [ ] MCP 추가·취소·스위치·테스트·삭제, IME 열린 채 회전.
 - [ ] Dialog를 연속 20회 열고 닫아 검은 프레임·누적 메모리 증가 여부 확인.
 - [ ] 시스템 바와 FAB가 본문/키보드와 겹치지 않음.
@@ -813,7 +825,7 @@ Dialog가 열리면 여러 root가 생길 수 있다. `onRoot()` 하나를 무�
 | 시작 직후 RenderThread SIGSEGV | backdrop 순환 | source 하위에 같은 source 소비자가 있는지 확인; 형제 분리 |
 | 카드 내부 버튼 추가 후 crash | 부모 표면 재캡처 | `layerBackdrop` 중첩 제거, 필요하면 exportedBackdrop |
 | 유리가 단색처럼 보임 | 배경 단조로움/불투명 컨테이너 | debug 패턴 사용, Scaffold/Card/Button 기본 색 확인 |
-| 효과가 전혀 없음 | source 연결/크기/정책 | layerBackdrop 위치, 0 size, Local null, Off 여부 확인 |
+| 효과가 전혀 없음 | source 연결/크기/API 정책 | layerBackdrop 위치, 0 size, Local null, API31/32 blur와 API33+ lens 경로 확인 |
 | unsupported shape 예외 | 기존 SquircleShape | RoundedCornerShape 또는 지원 Shapes로 교체 |
 | API31에서 lens 없음 | 정상 정책 | blur-only UI 품질 검수; 렌즈를 강제하지 않음 |
 | Dialog 배경이 어긋남 | cross-window 좌표 공유 | Dialog 안의 독립 host/source로 변경 |
@@ -840,19 +852,18 @@ native RenderThread crash는 Compose 함수 주변 try/catch로 복구할 수 �
 | P2 | 공통 디자인 시스템 | tokens/buttons/fields/selection/bars | 각 상태·semantics 확인 |
 | P3 | 앱 셸 및 Gallery | 두 Activity host, bar, gallery | 시작·재생성·삭제 흐름 |
 | P4 | Create 및 Detail | compact/dual pane/preview frame | 생성·편집·저장 회귀 |
-| P5 | Settings 및 MCP | slider/switch/dialog/효과 설정 | IME·모달·상태·설정 저장 |
+| P5 | Settings 및 MCP | glass slider/switch/dialog 정리 | IME·모달·상태·설정 저장 |
 | P6 | 검수·정리 | 기기 증거·성능·미사용 유틸 제거 | 15장 체크리스트 |
 
 순서는 의존 관계다. 날짜나 소요 시간을 확정한 일정이 아니다. P0 실패를 해결하지 않은 채 P3~P5 코드를 누적하지 않는다. 각 묶음에서 기능 변경과 시각 변경을 리뷰할 수 있도록 분리한다.
 
 ### 14.2 롤백 전략
 
-1. 앱 공통 컴포넌트는 Off 모드에서도 동작하게 한다. 출시 기본값을 Off로 돌릴 수 있는 중앙 기본 정책을 둔다.
-2. 기기별 렌더 문제가 발견되면 먼저 Full → BlurOnly → Off로 낮추어 원인을 좁힌다. 임의 모델명 blacklist를 첫 해결책으로 만들지 않는다.
-3. 사용자 저장 설정과 별개로 앱 빌드의 강제 Off를 둘 경우 우선순위를 문서화한다: 긴급 강제 Off > 사용자 설정 > 자동 API 선택.
-4. 앱이 시작 전에 crash하면 사용자가 설정 화면에 들어갈 수 없으므로 UI 토글만을 롤백 수단으로 삼지 않는다. 강제 Off 기본값을 적용한 수정 빌드와 코드 revert 경로를 준비한다.
-5. 의존성 업그레이드와 UI 전환 커밋을 분리해 필요 시 UI만 되돌릴 수 있게 한다. DB 스키마/사용자 DSL 변경을 이 작업에 섞지 않는다.
-6. 실제 배포는 검증 증거가 준비된 뒤 기존 프로젝트 배포 절차로 수행한다. 이 문서 작성 자체는 APK 배포를 의미하지 않는다.
+1. 현재 minSdk가 지원하는 효과는 항상 사용하고 API capability fallback은 코드 정책으로만 처리한다. 사용자 강도 선택/강제 Off 토글은 두지 않는다.
+2. 기기별 렌더 문제가 발견되면 API31–32의 blur fallback 경로와 API33+ lens 렌더 경로, backdrop source 구조를 확인한다. 임의 모델명 blacklist를 첫 해결책으로 만들지 않는다.
+3. 앱이 시작 전에 crash하면 사용자 설정으로 해결할 수 없다. 재현 결과에 따라 위험한 effect modifier를 수정하거나 해당 변경을 되돌리는 새 빌드를 만든다.
+4. 의존성 업그레이드와 UI 전환 커밋을 분리해 필요 시 UI만 되돌릴 수 있게 한다. DB 스키마/사용자 DSL 변경을 이 작업에 섞지 않는다.
+5. 실제 배포는 기존 프로젝트 배포 절차를 따른다. 이 문서 작성 자체는 APK 배포를 의미하지 않는다.
 
 ## 15. 최종 완료 기준
 
@@ -863,15 +874,17 @@ native RenderThread crash는 Compose 함수 주변 try/catch로 복구할 수 �
 - [x] 앱 소유 UI의 현재 버튼·입력·선택·상태·바·카드·다이얼로그를 공통 Glass API로 전환하고 DSL/Glance 경계를 기록함.
 - [x] compact/dual-pane Create, 오류·로딩·성공·빈 상태, disabled/selected 상태의 앱 소스를 전환함.
 - [x] 기존 삭제 확인과 MCP 등록 다이얼로그를 GlassDialog로 전환함. IME·Back·outside·focus의 기기 동작은 아래 미완료 검수에 포함.
-- [ ] API31–32 BlurOnly, API33+ Full, Off 모드에서 실제 기능과 최종 가독성을 기기로 확인함.
+- [ ] API31–32의 blur와 API33+ Full 효과에서 실제 기능과 최종 가독성을 기기로 확인함.
 - [ ] 글꼴 2배·TalkBack·터치 영역·합성 후 대비를 기기에서 검수함.
-- [x] 전체 JVM 단위 테스트 48개 통과, `GlassRenderingTest`/`StartupRenderingTest` 계측 APK 컴파일.
+- [x] 이전 구현 시점에 JVM 단위 테스트 48개 통과 및 계측 APK 컴파일. 이번 정책 변경의 테스트는 사용자 요청에 따라 다시 실행하지 않음.
 - [ ] 시작/재생성/모달 계측 테스트를 연결된 기기에서 실행하고 실제 스크린샷 증거를 남김. 테스트 APK/시나리오는 있지만 실행은 미완료.
 - [ ] 대표 화면의 프레임 시간·메모리 회귀를 측정함.
 - [x] DSL preview 내용과 Glance 위젯 렌더러·저장 데이터를 그대로 보존함.
 - [x] 미사용 `ui/theme/LiquidGlassComponents.kt`를 제거함.
 - [x] Backdrop 라이선스와 NOTICE 고지를 앱 assets에 포함함.
-- [x] 효과 비활성화 fallback과 수정 빌드용 강제 Off 경로를 마련함.
+- [x] 사용자 선택 UI 없이 API31–32 blur / API33+ lens를 고르는 최상 효과 정책을 사용함.
+- [x] 하단 내비게이션을 떠 있는 캡슐 형태의 glass bar로 바꾸고 navigation bar insets를 분리함.
+- [x] Dialog의 backdrop 원본을 dialog shape 안으로 clip해 카드 모서리와 배경 소스 모서리를 맞춤.
 
 코드·빌드·단위 테스트는 완료되어도 위 기기 항목이 남아 있으면 **최종 시각/성능 인수는 완료가 아니다**. 작업을 이어받은 개발자는 `docs/liquid-glass/verification.md`의 장치 제약과 남은 검수를 함께 갱신한다.
 

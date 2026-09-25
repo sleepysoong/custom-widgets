@@ -2,7 +2,6 @@ package com.customwidgets.app.qa
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.semantics.SemanticsActions
-import com.customwidgets.app.R
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -33,20 +32,6 @@ class GlassRenderingTest {
         assertTrue(modal.width > 0 && modal.height > 0)
         compose.onNodeWithTag("close-dialog").performClick()
         compose.onNodeWithText("Glass dialog").assertDoesNotExist()
-    }
-
-    @Test fun everyAppearanceModeSurvivesRendering() {
-        val labels = listOf(R.string.glass_reduced, R.string.glass_off, R.string.glass_automatic)
-        try {
-            labels.forEach { label ->
-                compose.onNodeWithText(compose.activity.getString(label)).performScrollTo().performClick()
-                compose.onNodeWithTag("glass-card").performScrollTo()
-                assertPixels()
-            }
-        } finally {
-            compose.activity.getSharedPreferences("glass_appearance", 0).edit()
-                .putString("visual_effects", "Auto").commit()
-        }
     }
 
     @Test fun sliderSupportsAccessibilityValueChanges() {

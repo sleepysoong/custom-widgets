@@ -56,9 +56,4 @@
     <string name="error_rate_limited">Rate limited. Please wait and try again.</string>
     <string name="error_generation_failed">Widget generation failed</string>
     <string name="btn_retry">Retry</string>
-    <string name="glass_appearance_title">Visual effects</string>
-    <string name="glass_appearance_description">Choose the glass effect intensity. All features remain available with effects off.</string>
-    <string name="glass_automatic">Automatic · Liquid glass for your device</string>
-    <string name="glass_reduced">Reduced · Gentle blur</string>
-    <string name="glass_off">Off · Clear opaque surfaces</string>
 </resources>

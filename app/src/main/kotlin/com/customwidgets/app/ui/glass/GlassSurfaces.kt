@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.heading
@@ -88,10 +89,15 @@ fun GlassNavigationBar(
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable RowScope.() -> Unit
 ) {
+    val shape = RoundedCornerShape(50)
     NavigationBar(
-        modifier = modifier.glassMaterial(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
+        modifier = modifier
+            .shadow(elevation = 14.dp, shape = shape, clip = false)
+            .glassMaterial(shape, MaterialTheme.colorScheme.surfaceContainerHigh, compact = false),
         containerColor = Color.Transparent, contentColor = contentColor,
-        tonalElevation = 0.dp, content = content
+        tonalElevation = 0.dp,
+        windowInsets = WindowInsets(0, 0, 0, 0),
+        content = content
     )
 }
 
@@ -146,9 +152,10 @@ fun GlassDialog(
         BoxWithConstraints(Modifier.widthIn(max = 560.dp).fillMaxWidth().safeDrawingPadding().imePadding()) {
             GlassHost(
                 modifier = modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(max = maxHeight),
-                fillWindow = false
+                fillWindow = false,
+                backgroundShape = shape
             ) {
-                GlassSurface(shape = shape) {
+                GlassSurface(modifier = Modifier.fillMaxWidth(), shape = shape) {
                     Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                         if (title != null) {
                             Box(Modifier.semantics { heading() }) {

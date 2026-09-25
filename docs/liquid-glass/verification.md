@@ -9,14 +9,15 @@
 | Backdrop AAR compile SDK 요구 | `:app:checkDebugAarMetadata` 및 `:app:checkReleaseAarMetadata` (AAR 검사를 끄는 Gradle task 없음) | 통과, compileSdk 37 |
 | 앱 Kotlin + KSP/Hilt | `:app:compileDebugKotlin`, `:app:compileReleaseKotlin` | 통과 |
 | 최신 debug APK | `:app:assembleDebug` | 성공, `app/build/outputs/apk/debug/app-debug.apk` 갱신 |
+| 이번 후속 변경 debug APK | `./gradlew :app:assembleDebug --no-daemon` | BUILD SUCCESSFUL, 1분 35초. 강제 최상 효과 정책·glass slider·Dialog clipping·플로팅 바 포함; 73,071,364 bytes; SHA-256 `0b3ad0014ba2bf72e393da2dc39af76f494c1f1779be704f3e12b0ce0ecb47ef` |
 | 최신 release APK | `:app:assembleRelease` (max-workers=1, Gradle heap 1536 MiB) | 성공, `app/build/outputs/apk/release/app-release.apk` 갱신 |
 | Compose 계측 테스트 APK | 최신 `:app:assembleDebugAndroidTest` | 계측 코드 컴파일 및 APK 생성. Compose v2 rule로 이행하라는 deprecation warning 2건; 테스트 실행 여부와는 별개 |
 | Compose dependency resolution | `:app:dependencies --configuration debugRuntimeClasspath` | BOM에서 AndroidX Compose 1.12.1 선택; Backdrop 2.0.1의 Android variant가 요구한 1.12.0은 BOM으로 1.12.1에 정렬; duplicate-class 체크 통과 |
-| JVM 단위 테스트 | `:app:testDebugUnitTest` | 48 tests, 실패 0. `GlassPolicyTest` 2개 포함 |
+| JVM 단위 테스트 | 이전 구현 시점의 `:app:testDebugUnitTest` 결과 | 48 tests, 실패 0. 이번 API 기반 정책 변경 뒤에는 사용자 요청에 따라 다시 실행하지 않음 |
 | lint | 이전 `:app:lintDebug` 실행 기록 | 주로 기존 미사용 리소스·오래된 종속성·구두점 경고. 최종 화면 변경 뒤에는 재실행하지 않음 |
 | patch whitespace | `git diff --check` | 통과 |
 
-계측 테스트는 `GlassRenderingTest`(host/panel 표시, 재생성, controls, 입력, modal, 효과 모드와 slider semantics) 및 `StartupRenderingTest`(MainActivity 첫 화면/재생성)을 포함한다. 이들은 코드에 들어 있고 APK에서 컴파일됐으나 아래 장치 문제로 실행 결과는 아직 없다.
+계측 테스트는 `GlassRenderingTest`(host/panel 표시, 재생성, controls, 입력, modal, slider semantics) 및 `StartupRenderingTest`(MainActivity 첫 화면/재생성)을 포함한다. 이 테스트 소스는 이전 APK에서 컴파일됐지만 효과 선택 UI 제거 후 다시 컴파일하지 않았으며, 아래 장치 문제로 기기 실행 결과도 아직 없다.
 
 최종 APK 생성 전 로컬 메모리 한도 때문에 `mergeExtDexDebug`가 768 MiB Gradle heap으로 실패했고, debug/release를 2048 MiB heap에서 한꺼번에 패키징할 때 프로세스가 종료됐다. 캐시를 활용해 debug를 따로 생성하고 release는 1536 MiB heap으로 따로 생성해 두 APK 모두 성공했다. 일반 개발 PC/CI에서는 프로젝트 기본 `org.gradle.jvmargs`를 사용하고, 메모리 제한이 작은 환경에서는 변형을 나눠 빌드한다.
 
@@ -38,4 +39,4 @@ adb devices
 adb logcat -d -s AndroidRuntime RenderThread
 ```
 
-계측 테스트가 완료되면 HTML/XML 결과를 확인하고, MainActivity와 debug Glass Catalog에서 실제 스크린샷을 저장한다. 특히 API 31/32의 blur, API 33+ lens, Full/Reduced/Off, Dialog, 1.5×·2× 글꼴, TalkBack, IME와 접힘/펼침을 확인한다. Emulator PASS는 실기기 GPU 성능·접근성을 대신하지 않는다.
+계측 테스트가 완료되면 HTML/XML 결과를 확인하고, MainActivity와 debug Glass Catalog에서 실제 스크린샷을 저장한다. 특히 API31–32의 자동 blur, API33+의 Full lens, 창의성 슬라이더, MCP 등록 Dialog의 네 모서리, 플로팅 하단 바, 1.5×·2× 글꼴, TalkBack, IME와 접힘/펼침을 확인한다. 설정 화면에 효과 강도 선택 항목이 없어야 한다. Emulator PASS는 실기기 GPU 성능·접근성을 대신하지 않는다.
